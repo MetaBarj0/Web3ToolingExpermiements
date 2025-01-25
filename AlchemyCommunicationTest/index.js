@@ -44,6 +44,12 @@ class Playground {
 
     console.log(`Done! ${amount} wei have been transferred to ${to}!`);
   }
+
+  async printFeeData() {
+    const feeData = await this.provider.getFeeData();
+
+    console.log(feeData);
+  }
 }
 
 async function main() {
@@ -56,6 +62,7 @@ async function main() {
   await playground.printLastContent();
   await playground.printBalance("");
   await playground.transfer({ signerPrivateKey: "", to: "" });
+  await playground.printFeeData();
 }
 
 await main();
