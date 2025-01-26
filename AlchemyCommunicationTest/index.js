@@ -50,6 +50,12 @@ class Playground {
 
     console.log(feeData);
   }
+
+  async printTransactionReceipt(hash) {
+    const receipt = await this.provider.getTransactionReceipt(hash);
+
+    console.log(receipt);
+  }
 }
 
 async function main() {
@@ -63,6 +69,9 @@ async function main() {
   await playground.printBalance("");
   await playground.transfer({ signerPrivateKey: "", to: "" });
   await playground.printFeeData();
+  await playground.printTransactionReceipt(
+    "0x78ba156846b302601b779df29443d354afff1b58492d4aa69a80eb162968be2b",
+  );
 }
 
 await main();
