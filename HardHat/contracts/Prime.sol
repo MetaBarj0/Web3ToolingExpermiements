@@ -58,6 +58,8 @@ contract Prime is ERC20 {
         uint256 value
     );
 
+    error NotEnoughToken();
+
     function totalSupply() public view override returns (uint256) {
         return _totalSupply;
     }
@@ -72,7 +74,7 @@ contract Prime is ERC20 {
         address to,
         uint256 value
     ) public override returns (bool success) {
-        if (_balances[msg.sender] < value) return false;
+        if (_balances[msg.sender] < value) revert NotEnoughToken();
 
         _balances[msg.sender] -= value;
         _balances[to] += value;

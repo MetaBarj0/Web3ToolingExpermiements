@@ -42,12 +42,23 @@ describe("Prime contract", () => {
         await _parsePrime("2"),
       );
 
+      // TODO: merge assertion here
       await contract.balanceOf(account1.address).should.eventually.equal(
         await _parsePrime("11"),
       );
       await contract.balanceOf(account2.address).should.eventually.equal(
         await _parsePrime("2"),
       );
+    });
+
+    it("should fails if the sender account does not have enough tokens", async () => {
+      const [_, account1, account2] = await ethers.getSigners();
+
+      return contract.connect(account1).transfer(
+        account2.address,
+        // TODO: find a way to remove the await for each _parsePrime call
+        await _parsePrime("1"),
+      ).should.be.revertedWithCustomError(contract, "NotEnoughToken"); // reverted assert must not be used with eventually
     });
 
     async function _parsePrime(amount) {
