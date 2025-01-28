@@ -44,13 +44,14 @@ describe("Prime contract", () => {
         _parsePrime("2"),
       );
 
-      // TODO: merge assertion here
-      await contract.balanceOf(account1.address).should.eventually.equal(
-        _parsePrime("11"),
-      );
-      await contract.balanceOf(account2.address).should.eventually.equal(
-        _parsePrime("2"),
-      );
+      return Promise.all([
+        contract.balanceOf(account1.address).should.eventually.equal(
+          _parsePrime("11"),
+        ),
+        contract.balanceOf(account2.address).should.eventually.equal(
+          _parsePrime("2"),
+        ),
+      ]);
     });
 
     it("should fails if the sender account does not have enough tokens", async () => {
@@ -59,7 +60,7 @@ describe("Prime contract", () => {
       return contract.connect(account1).transfer(
         account2.address,
         _parsePrime("1"),
-      ).should.be.revertedWithCustomError(contract, "NotEnoughToken"); // reverted assert must not be used with eventually
+      ).should.be.revertedWithCustomError(contract, "NotEnoughToken");
     });
 
     function _parsePrime(amount) {
