@@ -19,14 +19,14 @@ describe("Prime contract", () => {
   });
 
   describe("Deployment", () => {
-    it("should set the correct owner", async () => {
-      await contract.owner().should.eventually.equal(owner.address);
+    it("should set the correct owner", () => {
+      return contract.owner().should.eventually.equal(owner.address);
     });
 
     it("should assign the total supply of tokens to the owner when deployed", async () => {
       const ownerBalance = await contract.balanceOf(owner.address);
 
-      await contract.totalSupply().should.eventually.equal(ownerBalance);
+      return contract.totalSupply().should.eventually.equal(ownerBalance);
     });
   });
 
@@ -55,12 +55,40 @@ describe("Prime contract", () => {
     });
 
     it("should fails if the sender account does not have enough tokens", async () => {
+      // TODO: accounts also in beforeEach
       const [_, account1, account2] = await ethers.getSigners();
 
       return contract.connect(account1).transfer(
         account2.address,
         _parsePrime("1"),
       ).should.be.revertedWithCustomError(contract, "NotEnoughToken");
+    });
+
+    it("should emit Transfer events", async () => {
+      const [_, account1, account2] = await ethers.getSigners();
+
+      const firstTransfer = contract.transfer(
+        account1.address,
+        _parsePrime("17"),
+      );
+
+      const secondTransfer = contract.connect(account1).transfer(
+        account2.address,
+        _parsePrime("3"),
+      );
+
+      return Promise.all([
+        firstTransfer.should.emit(contract, "Transfer").withArgs(
+          owner.address,
+          account1.address,
+          _parsePrime("17"),
+        ),
+        secondTransfer.should.emit(contract, "Transfer").withArgs(
+          account1.address,
+          account2.address,
+          _parsePrime("3"),
+        ),
+      ]);
     });
 
     function _parsePrime(amount) {
