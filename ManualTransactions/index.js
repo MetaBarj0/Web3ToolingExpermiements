@@ -182,6 +182,27 @@ class ContractTransactions extends ProviderAndSigner {
     console.log({ address, balance: this.#formatBalance(balance) });
   }
 
+  async transfer({ to, value }) {
+    const amount = ethers.parseUnits(value, 17);
+
+    const estimate = await this.#contractWriter.transfer.estimateGas(
+      to,
+      amount,
+    );
+
+    console.log(`estimated gas price: ${estimate}`);
+
+    const tx = await this.#contractWriter.transfer(
+      to,
+      amount,
+      { gasLimit: estimate },
+    );
+
+    const receipt = await tx.wait();
+
+    console.log(receipt);
+  }
+
   #contractReader;
   #contractWriter;
 
@@ -221,10 +242,15 @@ async function transactWithContract() {
   await contractTransactions.printContractBalanceOf(
     "0xFb3b70beAE334a407975189874A1CD0A91c3C60a",
   );
+
+  await contractTransactions.transfer({
+    to: "0x23451F1BA8cEb318CE20aa825b97dc12e4fc136F",
+    value: "2",
+  });
 }
 
 async function main() {
-  await transactWithEOAs();
+  // await transactWithEOAs();
   await transactWithContract();
 }
 
