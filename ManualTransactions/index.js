@@ -203,6 +203,16 @@ class ContractTransactions extends ProviderAndSigner {
     console.log(receipt);
   }
 
+  async printTransferEventCount({ fromBlock, toBlock }) {
+    const events = await this.#contractReader.queryFilter(
+      "Transfer",
+      fromBlock,
+      toBlock,
+    );
+
+    console.log(`${events.length} events...`);
+  }
+
   #contractReader;
   #contractWriter;
 
@@ -246,6 +256,10 @@ async function transactWithContract() {
   await contractTransactions.transfer({
     to: "0x23451F1BA8cEb318CE20aa825b97dc12e4fc136F",
     value: "2",
+  });
+
+  await contractTransactions.printTransferEventCount({
+    fromBlock: 7582429,
   });
 }
 
