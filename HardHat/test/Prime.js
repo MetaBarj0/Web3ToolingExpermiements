@@ -16,13 +16,17 @@ describe("Prime contract", function () {
     contract = await ethers.deployContract("Prime");
   });
 
-  it("should assign the total supply of tokens to the owner when deployed", async function () {
+  it("should set the correct owner", async () => {
+    await contract.owner().should.eventually.equal(owner.address);
+  });
+
+  it("should assign the total supply of tokens to the owner when deployed", async () => {
     const ownerBalance = await contract.balanceOf(owner.address);
 
     await contract.totalSupply().should.eventually.equal(ownerBalance);
   });
 
-  it("should be able to transfer token between two accounts", async function () {
+  it("should be able to transfer token between two accounts", async () => {
     const [_, account1, account2] = await ethers.getSigners();
 
     await contract.transfer(

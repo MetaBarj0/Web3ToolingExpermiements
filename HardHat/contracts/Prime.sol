@@ -34,7 +34,7 @@ contract Prime is ERC20 {
     uint8 public decimal;
 
     constructor() {
-        _creator = msg.sender;
+        owner = msg.sender;
 
         symbol = "PRI";
         name = "Prime";
@@ -47,8 +47,8 @@ contract Prime is ERC20 {
         //             vvvvvvvvv|
         _totalSupply = 1_000_003_100_000_000_020_653_83;
 
-        _balances[_creator] = _totalSupply;
-        emit Transfer(address(0), _creator, _totalSupply);
+        _balances[owner] = _totalSupply;
+        emit Transfer(address(0), owner, _totalSupply);
     }
 
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -63,9 +63,9 @@ contract Prime is ERC20 {
     }
 
     function balanceOf(
-        address owner
+        address _owner
     ) public view override returns (uint256 balance) {
-        return _balances[owner];
+        return _balances[_owner];
     }
 
     function transfer(
@@ -109,13 +109,13 @@ contract Prime is ERC20 {
     }
 
     function allowance(
-        address owner,
+        address _owner,
         address spender
     ) public view override returns (uint256 remaining) {
-        return _allowances[owner][spender];
+        return _allowances[_owner][spender];
     }
 
-    address private _creator;
+    address public owner;
     uint256 private _totalSupply;
 
     mapping(address owner => uint256 amount) private _balances;
