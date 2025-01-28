@@ -10,10 +10,12 @@ chai.should();
 describe("Prime contract", () => {
   let owner;
   let contract;
+  let decimal;
 
   beforeEach(async () => {
     [owner] = await ethers.getSigners();
     contract = await ethers.deployContract("Prime");
+    decimal = await contract.decimal();
   });
 
   describe("Deployment", () => {
@@ -34,20 +36,20 @@ describe("Prime contract", () => {
 
       await contract.transfer(
         account1.address,
-        await _parsePrime("13"),
+        _parsePrime("13"),
       );
 
       await contract.connect(account1).transfer(
         account2.address,
-        await _parsePrime("2"),
+        _parsePrime("2"),
       );
 
       // TODO: merge assertion here
       await contract.balanceOf(account1.address).should.eventually.equal(
-        await _parsePrime("11"),
+        _parsePrime("11"),
       );
       await contract.balanceOf(account2.address).should.eventually.equal(
-        await _parsePrime("2"),
+        _parsePrime("2"),
       );
     });
 
@@ -56,14 +58,11 @@ describe("Prime contract", () => {
 
       return contract.connect(account1).transfer(
         account2.address,
-        // TODO: find a way to remove the await for each _parsePrime call
-        await _parsePrime("1"),
+        _parsePrime("1"),
       ).should.be.revertedWithCustomError(contract, "NotEnoughToken"); // reverted assert must not be used with eventually
     });
 
-    async function _parsePrime(amount) {
-      const decimal = await contract.decimal();
-
+    function _parsePrime(amount) {
       return ethers.parseUnits(amount, decimal);
     }
   });
