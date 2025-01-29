@@ -1,6 +1,6 @@
-import * as chai from "chai";
-import chaiAsPromised from "chai-as-promised";
-import hardhat from "hardhat";
+const chai = require("chai");
+const chaiAsPromised = require("chai-as-promised").default;
+const hardhat = require("hardhat");
 
 chai.use(chaiAsPromised);
 

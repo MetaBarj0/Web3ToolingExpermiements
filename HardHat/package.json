@@ -4,17 +4,18 @@
   "description": "",
   "license": "ISC",
   "author": "",
-  "type": "module",
+  "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "compile": "npx hardhat compile",
     "test": "npx hardhat test",
-    "clean": "npx hardhat clean"
+    "compile": "npx hardhat compile",
+    "clean": "npx hardhat clean",
+    "watch":"npm run test && npx hardhat watch test"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "chai-as-promised": "^8.0.1",
-    "hardhat": "^2.22.18"
+    "hardhat": "^2.22.18",
+    "hardhat-watcher": "^2.5.0"
   }
 }
