@@ -2,3 +2,5 @@ node_modules
 cache
 artifacts
 ignition/deployments
+coverage.json
+coverage
