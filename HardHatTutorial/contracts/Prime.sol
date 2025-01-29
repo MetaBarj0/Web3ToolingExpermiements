@@ -82,7 +82,7 @@ contract Prime is ERC20 {
         address to,
         uint256 value
     ) public override returns (bool success) {
-        if (_balances[msg.sender] < value) revert NotEnoughToken();
+        require(_balances[msg.sender] >= value, NotEnoughToken());
 
         _balances[msg.sender] -= value;
         _balances[to] += value;
