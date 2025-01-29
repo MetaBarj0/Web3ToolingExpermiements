@@ -28,6 +28,8 @@ interface ERC20 {
     ) external view returns (uint256 remaining);
 }
 
+import "hardhat/console.sol";
+
 contract Prime is ERC20 {
     string public symbol;
     string public name;
@@ -49,6 +51,8 @@ contract Prime is ERC20 {
 
         _balances[owner] = _totalSupply;
         emit Transfer(address(0), owner, _totalSupply);
+
+        console.log("Optimus Prime!");
     }
 
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -123,4 +127,11 @@ contract Prime is ERC20 {
     mapping(address owner => uint256 amount) private _balances;
     mapping(address owner => mapping(address spender => uint256 amount))
         private _allowances;
+
+    function hof(
+        function(uint256) internal returns (uint256) f,
+        uint256 a
+    ) internal returns (uint256) {
+        return f(a);
+    }
 }
