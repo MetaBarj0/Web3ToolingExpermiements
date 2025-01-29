@@ -8,22 +8,30 @@ const { ethers } = hardhat;
 chai.should();
 
 describe("Prime contract", () => {
-  let owner;
+  let signers;
+
+  before(async () => {
+    signers = await ethers.getSigners();
+  });
+
   let contract;
   let decimal;
 
   beforeEach(async () => {
-    [owner] = await ethers.getSigners();
     contract = await ethers.deployContract("Prime");
     decimal = await contract.decimal();
   });
 
   describe("Deployment", () => {
     it("should set the correct owner", () => {
+      const [owner] = signers;
+
       return contract.owner().should.eventually.equal(owner.address);
     });
 
     it("should assign the total supply of tokens to the owner when deployed", async () => {
+      const [owner] = signers;
+
       const ownerBalance = await contract.balanceOf(owner.address);
 
       return contract.totalSupply().should.eventually.equal(ownerBalance);
@@ -32,7 +40,7 @@ describe("Prime contract", () => {
 
   describe("Transactions", () => {
     it("should be able to transfer token between two accounts", async () => {
-      const [_, account1, account2] = await ethers.getSigners();
+      const [_, account1, account2] = signers;
 
       await contract.transfer(
         account1.address,
@@ -54,9 +62,8 @@ describe("Prime contract", () => {
       ]);
     });
 
-    it("should fails if the sender account does not have enough tokens", async () => {
-      // TODO: accounts also in beforeEach
-      const [_, account1, account2] = await ethers.getSigners();
+    it("should fails if the sender account does not have enough tokens", () => {
+      const [_, account1, account2] = signers;
 
       return contract.connect(account1).transfer(
         account2.address,
@@ -64,8 +71,8 @@ describe("Prime contract", () => {
       ).should.be.revertedWithCustomError(contract, "NotEnoughToken");
     });
 
-    it("should emit Transfer events", async () => {
-      const [_, account1, account2] = await ethers.getSigners();
+    it("should emit Transfer events", () => {
+      const [owner, account1, account2] = signers;
 
       const firstTransfer = contract.transfer(
         account1.address,
