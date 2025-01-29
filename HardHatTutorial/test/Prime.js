@@ -97,9 +97,23 @@ describe("Prime contract", () => {
         ),
       ]);
     });
-
-    function _parsePrime(amount) {
-      return ethers.parseUnits(amount, decimal);
-    }
   });
+
+  describe("Approval", () => {
+    it("should revert when trying to approve to a zero address spender", () => {
+      return contract.approve(ethers.ZeroAddress, 0n).should.be
+        .revertedWithCustomError(contract, "InvalidSpenderAddress");
+    });
+
+    it("should revert when trying to approve a too high ammount for a spender", () => {
+      const [_, emptyAccount, spender] = signers;
+
+      return contract.connect(emptyAccount).approve(spender, _parsePrime("1"))
+        .should.be.revertedWithCustomError(contract, "NotEnoughTokenForOwner");
+    });
+  });
+
+  function _parsePrime(amount) {
+    return ethers.parseUnits(amount, decimal);
+  }
 });
