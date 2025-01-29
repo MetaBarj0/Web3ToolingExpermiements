@@ -12,7 +12,7 @@
     "clean": "npx hardhat clean",
     "watch": "npm run test && npx hardhat watch test",
     "deployLocal": "npx hardhat ignition deploy ./ignition/modules/prime.js",
-    "deploySepolia": "npx hardhat ignition deploy --network sepolia ./ignition/modules/prime.js"
+    "deploySepolia": "npx hardhat ignition deploy --network sepolia --verify ./ignition/modules/prime.js"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",

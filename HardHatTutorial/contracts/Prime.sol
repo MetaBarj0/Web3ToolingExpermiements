@@ -30,6 +30,10 @@ interface ERC20 {
 
 import "hardhat/console.sol";
 
+/// @title A unuseful ERC20 contract
+/// @author M374Crypto
+/// @notice Fun ERC20 token emphasizing the power of Prime!
+/// @dev Don't use this buddy in production
 contract Prime is ERC20 {
     string public symbol;
     string public name;
