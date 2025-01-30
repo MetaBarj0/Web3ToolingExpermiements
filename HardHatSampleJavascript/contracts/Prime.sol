@@ -28,7 +28,7 @@ interface ERC20 {
     ) external view returns (uint256 remaining);
 }
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol"; // Yes it works with hardhat
 
 /// @title A unuseful ERC20 contract
 /// @author M374Crypto
@@ -56,7 +56,7 @@ contract Prime is ERC20 {
         _balances[owner] = _totalSupply;
         emit Transfer(address(0), owner, _totalSupply);
 
-        console.log("Optimus Prime!");
+        // console.log("Optimus Prime!"); // hardhat log facilities
     }
 
     event Transfer(address indexed from, address indexed to, uint256 value);
