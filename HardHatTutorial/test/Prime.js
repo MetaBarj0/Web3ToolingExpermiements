@@ -122,6 +122,19 @@ describe("Prime contract", () => {
       return contract.allowance(owner, spender)
         .should.eventually.equal(amount);
     });
+
+    it("should emit a proper Approval event when succeeding", async () => {
+      const [owner, spender] = signers;
+      const amount = 432n;
+
+      const tx = await contract.connect(owner).approve(spender, amount);
+
+      return tx.should.emit(contract, "Approval").withArgs(
+        owner,
+        spender,
+        amount,
+      );
+    });
   });
 
   function _parsePrime(amount) {

@@ -120,6 +120,8 @@ contract Prime is ERC20 {
 
         _allowances[msg.sender][spender] = value;
 
+        emit Approval(msg.sender, spender, value);
+
         return true;
     }
 
