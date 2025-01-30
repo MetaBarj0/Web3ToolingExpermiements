@@ -40,9 +40,9 @@ describe("Prime contract", () => {
 
   describe("Transactions", () => {
     it("should be able to transfer token between two accounts", async () => {
-      const [_, account1, account2] = signers;
+      const [owner, account1, account2] = signers;
 
-      await contract.transfer(
+      await contract.connect(owner).transfer(
         account1.address,
         _parsePrime("13"),
       );
