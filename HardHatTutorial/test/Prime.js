@@ -105,6 +105,31 @@ describe("Prime contract", () => {
           "CannotSpendMoreThanApproved",
         );
     });
+
+    it("should be able to tranfer from behalf owner and emit Transfer event as well as update allowances", async () => {
+      const [owner, from, to, spender] = signers;
+      const [approvalAmount, spentAmount] = [456, 123];
+
+      const fromProvisioning = await contract.connect(owner)
+        .transfer(from, approvalAmount);
+      await fromProvisioning.wait();
+
+      const approval = await contract.connect(from)
+        .approve(spender, approvalAmount);
+      await approval.wait();
+
+      const transferFrom = await contract.connect(spender)
+        .transferFrom(from, to, spentAmount);
+      await transferFrom.wait();
+
+      return Promise.all([
+        contract.allowance(from, spender)
+          .should.eventually.equal(approvalAmount - spentAmount),
+        contract.connect(spender).transferFrom(from, to, spentAmount)
+          .should.emit(contract, "Transfer")
+          .withArgs(from, to, spentAmount),
+      ]);
+    });
   });
 
   describe("Approval", () => {

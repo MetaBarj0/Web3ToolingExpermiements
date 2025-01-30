@@ -121,8 +121,6 @@ contract Prime is ERC20 {
         require(spender != address(0), InvalidZeroAddress());
         require(_balances[msg.sender] >= value, NotEnoughTokenForOwner());
 
-        if (_balances[msg.sender] < value) return false;
-
         _allowances[msg.sender][spender] = value;
 
         emit Approval(msg.sender, spender, value);
