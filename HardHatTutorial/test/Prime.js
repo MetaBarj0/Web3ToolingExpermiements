@@ -79,12 +79,38 @@ describe("Prime contract", () => {
           .withArgs(account1, account2, _parsePrime("3")),
       ]);
     });
+
+    it("should fail to transfer from zero address", () => {
+      const [owner, to] = signers;
+
+      return contract.connect(owner)
+        .transferFrom(ethers.ZeroAddress, to, 0)
+        .should.revertedWithCustomError(contract, "InvalidZeroAddress");
+    });
+
+    it("should fail to transfer from behalf of the owner for a too high amount", async () => {
+      const [owner, spender, from, to] = signers;
+
+      const fromProvisioning = await contract.connect(owner)
+        .transfer(from, 1234);
+      await fromProvisioning.wait();
+
+      const approval = await contract.connect(from).approve(spender, 567);
+      await approval.wait();
+
+      return contract.connect(spender)
+        .transferFrom(from, to, 1000)
+        .should.revertedWithCustomError(
+          contract,
+          "CannotSpendMoreThanApproved",
+        );
+    });
   });
 
   describe("Approval", () => {
     it("should revert when trying to approve to a zero address spender", () => {
       return contract.approve(ethers.ZeroAddress, 0n).should.be
-        .revertedWithCustomError(contract, "InvalidSpenderAddress");
+        .revertedWithCustomError(contract, "InvalidZeroAddress");
     });
 
     it("should revert when trying to approve a too high ammount for a spender", () => {

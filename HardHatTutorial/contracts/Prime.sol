@@ -68,7 +68,8 @@ contract Prime is ERC20 {
 
     error NotEnoughToken();
     error NotEnoughTokenForOwner();
-    error InvalidSpenderAddress();
+    error InvalidZeroAddress();
+    error CannotSpendMoreThanApproved();
 
     function totalSupply() public view override returns (uint256) {
         return _totalSupply;
@@ -98,7 +99,11 @@ contract Prime is ERC20 {
         address to,
         uint256 value
     ) public override returns (bool success) {
-        if (_allowances[from][msg.sender] < value) return false;
+        require(from != address(0), InvalidZeroAddress());
+        require(
+            _allowances[from][msg.sender] >= value,
+            CannotSpendMoreThanApproved()
+        );
 
         _balances[from] -= value;
         _allowances[from][msg.sender] -= value;
@@ -113,7 +118,7 @@ contract Prime is ERC20 {
         address spender,
         uint256 value
     ) public override returns (bool success) {
-        require(spender != address(0), InvalidSpenderAddress());
+        require(spender != address(0), InvalidZeroAddress());
         require(_balances[msg.sender] >= value, NotEnoughTokenForOwner());
 
         if (_balances[msg.sender] < value) return false;
