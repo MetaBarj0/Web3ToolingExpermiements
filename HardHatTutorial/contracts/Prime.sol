@@ -136,11 +136,4 @@ contract Prime is ERC20 {
     mapping(address owner => uint256 amount) private _balances;
     mapping(address owner => mapping(address spender => uint256 amount))
         private _allowances;
-
-    function hof(
-        function(uint256) internal returns (uint256) f,
-        uint256 a
-    ) internal returns (uint256) {
-        return f(a);
-    }
 }

@@ -111,6 +111,17 @@ describe("Prime contract", () => {
       return contract.connect(emptyAccount).approve(spender, _parsePrime("1"))
         .should.be.revertedWithCustomError(contract, "NotEnoughTokenForOwner");
     });
+
+    it("should succeed approving a valid spendable amount", async () => {
+      const [owner, spender] = signers;
+      const amount = 123n;
+
+      const tx = await contract.connect(owner).approve(spender, amount);
+      await tx.wait();
+
+      return contract.allowance(owner, spender)
+        .should.eventually.equal(amount);
+    });
   });
 
   function _parsePrime(amount) {
