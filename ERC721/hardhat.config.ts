@@ -3,6 +3,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-watcher";
 
 import { vars } from "hardhat/config";
+import process from "node:process";
 
 const ALCHEMY_API_KEY = vars.get("ALCHEMY_API_KEY");
 const SEPOLIA_PRIVATE_KEY = vars.get("SEPOLIA_PRIVATE_KEY");
@@ -43,7 +44,7 @@ const config: HardhatUserConfig = {
           command: "test",
         },
       ],
-      files: ["./test/**/*.js", "./contracts/**/*.sol"],
+      files: ["./test/**/*.ts", "./contracts/**/*.sol"],
       verbose: true,
       clearOnStart: true,
     },

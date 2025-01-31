@@ -17,3 +17,6 @@ ignition/deployments/chain-31337
 
 # Hardhat Ignition default folder for deployments against sepolia
 ignition/deployments/chain-11155111
+
+# destination directory of transpiled files for tsc manual invocations
+/dist

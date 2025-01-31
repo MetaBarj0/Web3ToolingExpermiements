@@ -3,6 +3,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@types/chai-as-promised": "^8.0.1",
+    "@types/node": "^22.12.0",
     "chai-as-promised": "^8.0.1",
     "hardhat": "^2.22.18",
     "hardhat-watcher": "^2.5.0"
