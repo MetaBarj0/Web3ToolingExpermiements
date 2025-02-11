@@ -34,4 +34,15 @@ describe("ERC721 contract", () => {
         .should.eventually.equal(0n);
     });
   });
+
+  describe("Minting and burning", () => {
+    it("is not possible to mint NFT for free", () => {
+      const [owner] = signers;
+
+      return contract.connect(owner)
+        .mint()
+        .should.be.revertedWithCustomError(contract, "NotEnoughEth")
+        .withArgs(ethers.parseEther("0.01"));
+    });
+  });
 });

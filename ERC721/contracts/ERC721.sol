@@ -10,6 +10,8 @@ contract ERC721 is IERC721 {
     owner = msg.sender;
   }
 
+  error NotEnoughEth(uint256 amount);
+
   function balanceOf(address _owner) external view override returns (uint256) {}
 
   function ownerOf(uint256 tokenId) external view override returns (address) {}
@@ -38,4 +40,8 @@ contract ERC721 is IERC721 {
     address _owner,
     address operator
   ) external view override returns (bool) {}
+
+  function mint() external pure {
+    revert NotEnoughEth(0.01 ether);
+  }
 }
