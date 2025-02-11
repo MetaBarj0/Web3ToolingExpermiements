@@ -25,4 +25,13 @@ describe("ERC721 contract", () => {
       return contract.owner().should.eventually.equal(owner);
     });
   });
+
+  describe("Read contract", () => {
+    it("returns 0 for an account having no NFT", () => {
+      const [owner] = signers;
+
+      return contract.balanceOf(owner)
+        .should.eventually.equal(0n);
+    });
+  });
 });
