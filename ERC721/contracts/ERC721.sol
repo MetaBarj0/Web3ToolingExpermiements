@@ -6,13 +6,17 @@ import "./IERC721.sol";
 contract ERC721 is IERC721 {
   address public owner;
 
+  mapping(address => uint256) balances;
+
   constructor() {
     owner = msg.sender;
   }
 
   error NotEnoughEth(uint256 amount);
 
-  function balanceOf(address _owner) external view override returns (uint256) {}
+  function balanceOf(address _owner) external view override returns (uint256) {
+    return balances[_owner];
+  }
 
   function ownerOf(uint256 tokenId) external view override returns (address) {}
 
@@ -41,7 +45,9 @@ contract ERC721 is IERC721 {
     address operator
   ) external view override returns (bool) {}
 
-  function mint() external pure {
-    revert NotEnoughEth(0.01 ether);
+  function mint() external payable {
+    require(msg.value == 0.01 ether, NotEnoughEth(0.01 ether));
+
+    balances[msg.sender]++;
   }
 }

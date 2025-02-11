@@ -44,5 +44,16 @@ describe("ERC721 contract", () => {
         .should.be.revertedWithCustomError(contract, "NotEnoughEth")
         .withArgs(ethers.parseEther("0.01"));
     });
+
+    it("costs 0.01 eth to mint the very first NFT and it updates the buyer balance", async () => {
+      const [owner] = signers;
+
+      const tx = await contract.connect(owner)
+        .mint({ value: ethers.parseEther("0.01") });
+      await tx.wait();
+
+      return contract.balanceOf(owner)
+        .should.eventually.equal(1n);
+    });
   });
 });
