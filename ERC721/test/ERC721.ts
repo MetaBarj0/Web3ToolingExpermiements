@@ -47,13 +47,27 @@ describe("ERC721 contract", () => {
 
     it("costs 0.01 eth to mint the very first NFT and it updates the buyer balance", async () => {
       const [owner] = signers;
+      const tokenPrice = await contract.tokenPrice();
 
       const tx = await contract.connect(owner)
-        .mint({ value: ethers.parseEther("0.01") });
+        .mint({ value: tokenPrice });
       await tx.wait();
 
       return contract.balanceOf(owner)
         .should.eventually.equal(1n);
+    });
+
+    it("costs twice to mint the next NFT", async () => {
+      const [owner, account] = signers;
+      const firstTokenPrice = await contract.tokenPrice();
+
+      const tx = await contract.connect(owner)
+        .mint({ value: firstTokenPrice });
+      await tx.wait();
+
+      return contract.connect(account)
+        .tokenPrice()
+        .should.eventually.equal(ethers.parseEther("0.02"));
     });
   });
 });

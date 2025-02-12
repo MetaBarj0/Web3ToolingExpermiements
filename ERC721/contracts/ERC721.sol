@@ -8,6 +8,8 @@ contract ERC721 is IERC721 {
 
   mapping(address => uint256) balances;
 
+  uint256 mintedTokenCount = 0;
+
   constructor() {
     owner = msg.sender;
   }
@@ -49,5 +51,10 @@ contract ERC721 is IERC721 {
     require(msg.value == 0.01 ether, NotEnoughEth(0.01 ether));
 
     balances[msg.sender]++;
+    mintedTokenCount++;
+  }
+
+  function tokenPrice() external view returns (uint256) {
+    return 0.01 ether * 2 ** mintedTokenCount;
   }
 }
