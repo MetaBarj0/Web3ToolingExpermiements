@@ -15,6 +15,7 @@ contract ERC721 is IERC721 {
   }
 
   error NotEnoughEth(uint256 amount);
+  error TokenSupplyExhausted();
 
   function balanceOf(address _owner) external view override returns (uint256) {
     return balances[_owner];
@@ -49,6 +50,7 @@ contract ERC721 is IERC721 {
 
   function mint() external payable {
     require(msg.value == 0.01 ether, NotEnoughEth(0.01 ether));
+    require(mintedTokenCount <= 10, TokenSupplyExhausted());
 
     balances[msg.sender]++;
     mintedTokenCount++;
