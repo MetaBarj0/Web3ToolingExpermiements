@@ -41,7 +41,7 @@ describe("ERC721 contract", () => {
 
       return contract.connect(owner)
         .mint()
-        .should.be.revertedWithCustomError(contract, "NotEnoughEth")
+        .should.be.revertedWithCustomError(contract, "IncorrectEthAmount")
         .withArgs(ethers.parseEther("0.01"));
     });
 
@@ -68,6 +68,26 @@ describe("ERC721 contract", () => {
       return contract.connect(account)
         .tokenPrice()
         .should.eventually.equal(ethers.parseEther("0.02"));
+    });
+
+    it("is not possible to mint more than 10 tokens", async () => {
+      const [owner] = signers;
+
+      for (let index = 0; index < 10; index++) {
+        const tx = await contract.connect(owner).mint({
+          value: await contract.tokenPrice(),
+        });
+
+        await tx.wait();
+      }
+
+      return contract.connect(owner).mint({
+        value: await contract.tokenPrice(),
+      })
+        .should.be.revertedWithCustomError(
+          contract,
+          "TokenSupplyExhausted",
+        );
     });
   });
 });
