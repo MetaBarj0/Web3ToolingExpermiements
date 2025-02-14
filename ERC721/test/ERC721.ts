@@ -1,7 +1,7 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ethers } from "hardhat";
-import { Contract, Signers } from "./typesUtils.ts";
+import { Contract, Signer, Signers } from "./typesUtils.ts";
 
 chai.use(chaiAsPromised);
 chai.should();
@@ -73,13 +73,7 @@ describe("ERC721 contract", () => {
     it("is not possible to mint more than 10 tokens", async () => {
       const [owner] = signers;
 
-      for (let index = 0; index < 10; index++) {
-        const tx = await contract.connect(owner).mint({
-          value: await contract.tokenPrice(),
-        });
-
-        await tx.wait();
-      }
+      await mintTenTokens(contract, owner);
 
       return contract.connect(owner).mint({
         value: await contract.tokenPrice(),
@@ -91,3 +85,13 @@ describe("ERC721 contract", () => {
     });
   });
 });
+
+async function mintTenTokens(contract: Contract, owner: Signer) {
+  for (let index = 0; index < 10; index++) {
+    const tx = await contract.connect(owner).mint({
+      value: await contract.tokenPrice(),
+    });
+
+    await tx.wait();
+  }
+}
