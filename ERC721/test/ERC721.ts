@@ -106,6 +106,27 @@ describe("ERC721 contract", () => {
           "TokenSupplyExhausted",
         );
     });
+
+    it("should emit a Transfer event at token minting with from address being 0", async () => {
+      const [owner, account] = signers;
+
+      const txOwner = await contract.connect(owner)
+        .mint({ value: await contract.tokenPrice() });
+      await txOwner.wait();
+
+      const txAccount = await contract.connect(account)
+        .mint({ value: await contract.tokenPrice() });
+      await txAccount.wait();
+
+      return Promise.all([
+        txOwner
+          .should.emit(contract, "Transfer")
+          .withArgs(ethers.ZeroAddress, owner, 1n),
+        txAccount
+          .should.emit(contract, "Transfer")
+          .withArgs(ethers.ZeroAddress, account, 2n),
+      ]);
+    });
   });
 });
 

@@ -8,7 +8,7 @@ contract ERC721 is IERC721 {
 
   mapping(address => uint256) balances;
 
-  uint256 mintedTokenCount = 0;
+  uint256 mintedTokenCountAndId = 0;
 
   constructor() {
     owner = msg.sender;
@@ -55,13 +55,15 @@ contract ERC721 is IERC721 {
     uint256 requiredPrice = this.tokenPrice();
 
     require(msg.value == requiredPrice, IncorrectEthAmount(requiredPrice));
-    require(mintedTokenCount < 10, TokenSupplyExhausted());
+    require(mintedTokenCountAndId < 10, TokenSupplyExhausted());
 
     balances[msg.sender]++;
-    mintedTokenCount++;
+    mintedTokenCountAndId++;
+
+    emit Transfer(address(0), msg.sender, mintedTokenCountAndId);
   }
 
   function tokenPrice() external view returns (uint256) {
-    return 0.01 ether * 2 ** mintedTokenCount;
+    return 0.01 ether * 2 ** mintedTokenCountAndId;
   }
 }
