@@ -7,6 +7,7 @@ contract ERC721 is IERC721 {
   address public owner;
 
   mapping(address => uint256) balances;
+  mapping(uint256 => address) tokenIdToOwner;
 
   uint256 mintedTokenCountAndId = 0;
 
@@ -23,7 +24,9 @@ contract ERC721 is IERC721 {
   }
 
   function ownerOf(uint256 tokenId) external view override returns (address) {
-    revert InvalidTokenId();
+    require(tokenIdToOwner[tokenId] != address(0), InvalidTokenId());
+
+    return tokenIdToOwner[tokenId];
   }
 
   function transferFrom(
@@ -59,6 +62,7 @@ contract ERC721 is IERC721 {
 
     balances[msg.sender]++;
     mintedTokenCountAndId++;
+    tokenIdToOwner[mintedTokenCountAndId] = msg.sender;
 
     emit Transfer(address(0), msg.sender, mintedTokenCountAndId);
   }

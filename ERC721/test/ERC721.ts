@@ -34,7 +34,7 @@ describe("ERC721 contract", () => {
         .should.eventually.equal(0n);
     });
 
-    it("updates the balance for a minter", async () => {
+    it("updates the balance after a mint", async () => {
       const [owner, account] = signers;
 
       await mintTokens(contract, owner, 2n);
@@ -54,6 +54,35 @@ describe("ERC721 contract", () => {
       return invalidTokenIdentifiers.map((tokenId) =>
         contract.ownerOf(tokenId)
           .should.be.revertedWithCustomError(contract, "InvalidTokenId")
+      );
+    });
+
+    it("should returns the owner of a valid token id", async () => {
+      const [owner, account] = signers;
+
+      await mintTokens(contract, owner, 2n);
+      const ownerFilter = contract.filters.Transfer(null, owner);
+      const ownerEvents = await contract.queryFilter(ownerFilter);
+      const ownerTokenIdentifiers = ownerEvents.map((event) => event.args[2]);
+
+      await mintTokens(contract, account, 4n);
+      const accountFilter = contract.filters.Transfer(null, account);
+      const accountEvents = await contract.queryFilter(accountFilter);
+      const accountTokenIdentifiers = accountEvents.map((event) =>
+        event.args[2]
+      );
+
+      return Promise.all(
+        [
+          ...ownerTokenIdentifiers.map((tokenId: bigint) =>
+            contract.ownerOf(tokenId)
+              .should.eventually.equal(owner)
+          ),
+          ...accountTokenIdentifiers.map((tokenId: bigint) =>
+            contract.ownerOf(tokenId)
+              .should.eventually.equal(account)
+          ),
+        ],
       );
     });
   });
