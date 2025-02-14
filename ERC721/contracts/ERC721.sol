@@ -16,12 +16,15 @@ contract ERC721 is IERC721 {
 
   error IncorrectEthAmount(uint256 amount);
   error TokenSupplyExhausted();
+  error InvalidTokenId();
 
   function balanceOf(address _owner) external view override returns (uint256) {
     return balances[_owner];
   }
 
-  function ownerOf(uint256 tokenId) external view override returns (address) {}
+  function ownerOf(uint256 tokenId) external view override returns (address) {
+    revert InvalidTokenId();
+  }
 
   function transferFrom(
     address from,

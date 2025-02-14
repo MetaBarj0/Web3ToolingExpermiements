@@ -47,6 +47,15 @@ describe("ERC721 contract", () => {
           .should.eventually.equal(3n),
       ]);
     });
+
+    it("should revert with a InvalidTokenId error when querying the owner with an invalid token id", () => {
+      const invalidTokenIdentifiers = [0n, 1n, 42n];
+
+      return invalidTokenIdentifiers.map((tokenId) =>
+        contract.ownerOf(tokenId)
+          .should.be.revertedWithCustomError(contract, "InvalidTokenId")
+      );
+    });
   });
 
   describe("Minting and burning", () => {
