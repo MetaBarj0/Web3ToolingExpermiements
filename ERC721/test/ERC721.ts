@@ -33,6 +33,20 @@ describe("ERC721 contract", () => {
       return contract.balanceOf(owner)
         .should.eventually.equal(0n);
     });
+
+    it("updates the balance for a minter", async () => {
+      const [owner, account] = signers;
+
+      await mintTokens(contract, owner, 2n);
+      await mintTokens(contract, account, 3n);
+
+      return Promise.all([
+        contract.balanceOf(owner)
+          .should.eventually.equal(2n),
+        contract.balanceOf(account)
+          .should.eventually.equal(3n),
+      ]);
+    });
   });
 
   describe("Minting and burning", () => {
@@ -73,7 +87,7 @@ describe("ERC721 contract", () => {
     it("is not possible to mint more than 10 tokens", async () => {
       const [owner] = signers;
 
-      await mintTenTokens(contract, owner);
+      await mintTokens(contract, owner, 10n);
 
       return contract.connect(owner).mint({
         value: await contract.tokenPrice(),
@@ -86,8 +100,8 @@ describe("ERC721 contract", () => {
   });
 });
 
-async function mintTenTokens(contract: Contract, owner: Signer) {
-  for (let index = 0; index < 10; index++) {
+async function mintTokens(contract: Contract, owner: Signer, count: bigint) {
+  for (let index = 0n; index < count; index++) {
     const tx = await contract.connect(owner).mint({
       value: await contract.tokenPrice(),
     });
