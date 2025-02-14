@@ -7,3 +7,5 @@ export type Signer = Unpacked<Signers>;
 
 const deployContractFactory = async () => await ethers.deployContract("ERC721");
 export type Contract = Awaited<ReturnType<typeof deployContractFactory>>;
+
+export type ChainEvent = { args: unknown[] };

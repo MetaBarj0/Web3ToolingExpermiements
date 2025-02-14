@@ -1,7 +1,7 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ethers } from "hardhat";
-import { Contract, Signer, Signers } from "./typesUtils.ts";
+import { ChainEvent, Contract, Signer, Signers } from "./typesUtils.ts";
 
 chai.use(chaiAsPromised);
 chai.should();
@@ -63,12 +63,14 @@ describe("ERC721 contract", () => {
       await mintTokens(contract, owner, 2n);
       const ownerFilter = contract.filters.Transfer(null, owner);
       const ownerEvents = await contract.queryFilter(ownerFilter);
-      const ownerTokenIdentifiers = ownerEvents.map((event) => event.args[2]);
+      const ownerTokenIdentifiers = ownerEvents.map((event: ChainEvent) =>
+        event.args[2]
+      );
 
       await mintTokens(contract, account, 4n);
       const accountFilter = contract.filters.Transfer(null, account);
       const accountEvents = await contract.queryFilter(accountFilter);
-      const accountTokenIdentifiers = accountEvents.map((event) =>
+      const accountTokenIdentifiers = accountEvents.map((event: ChainEvent) =>
         event.args[2]
       );
 
