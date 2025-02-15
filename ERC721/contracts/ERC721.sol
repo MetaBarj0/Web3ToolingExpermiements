@@ -6,11 +6,11 @@ import "./IERC721.sol";
 contract ERC721 is IERC721 {
   address public owner;
 
-  mapping(address => uint256) balances;
-  mapping(uint256 => address) tokenIdToOwner;
-  mapping(uint256 => address) tokenIdToApproved;
+  mapping(address => uint256) private balances;
+  mapping(uint256 => address) private tokenIdToOwner;
+  mapping(uint256 => address) private tokenIdToApproved;
 
-  uint256 mintedTokenCountAndId = 0;
+  uint256 private mintedTokenCountAndId = 0;
 
   constructor() {
     owner = msg.sender;
