@@ -8,6 +8,7 @@ contract ERC721 is IERC721 {
 
   mapping(address => uint256) balances;
   mapping(uint256 => address) tokenIdToOwner;
+  mapping(uint256 => address) tokenIdToApproved;
 
   uint256 mintedTokenCountAndId = 0;
 
@@ -47,7 +48,11 @@ contract ERC721 is IERC721 {
 
   function getApproved(
     uint256 tokenId
-  ) external view override returns (address) {}
+  ) external view override returns (address) {
+    require(tokenIdToOwner[tokenId] != address(0), InvalidTokenId());
+
+    return tokenIdToApproved[tokenId];
+  }
 
   function isApprovedForAll(
     address _owner,

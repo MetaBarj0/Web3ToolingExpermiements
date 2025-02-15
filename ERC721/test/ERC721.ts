@@ -60,15 +60,15 @@ describe("ERC721 contract", () => {
     it("should returns the owner of a valid token id", async () => {
       const [owner, account] = signers;
 
-      await mintTokens(contract, owner, 2n);
       const ownerFilter = contract.filters.Transfer(null, owner);
+      await mintTokens(contract, owner, 2n);
       const ownerEvents = await contract.queryFilter(ownerFilter);
       const ownerTokenIdentifiers = ownerEvents.map((event: ChainEvent) =>
         event.args[2]
       );
 
-      await mintTokens(contract, account, 4n);
       const accountFilter = contract.filters.Transfer(null, account);
+      await mintTokens(contract, account, 4n);
       const accountEvents = await contract.queryFilter(accountFilter);
       const accountTokenIdentifiers = accountEvents.map((event: ChainEvent) =>
         event.args[2]
@@ -87,6 +87,28 @@ describe("ERC721 contract", () => {
         ],
       );
     });
+
+    it("should revert with a InvalidTokenId error when getting the approval for an invalid token id", () => {
+      return contract.getApproved(99n)
+        .should.be.revertedWithCustomError(contract, "InvalidTokenId");
+    });
+
+    it(
+      "should returns the zero address for a not yet approved NFT",
+      async () => {
+        const [owner] = signers;
+
+        // TODO: mint and get token id array
+        const ownerFilter = contract.filters.Transfer(null, owner);
+        await mintTokens(contract, owner, 1n);
+        const ownerEvents = await contract.queryFilter(ownerFilter);
+        const tokenId =
+          ownerEvents.map((event: ChainEvent) => event.args[2])[0];
+
+        return contract.getApproved(tokenId)
+          .should.eventually.equal(ethers.ZeroAddress);
+      },
+    );
   });
 
   describe("Minting and burning", () => {
