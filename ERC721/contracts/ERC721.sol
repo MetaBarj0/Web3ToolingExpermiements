@@ -9,6 +9,7 @@ contract ERC721 is IERC721 {
   mapping(address => uint256) private balances;
   mapping(uint256 => address) private tokenIdToOwner;
   mapping(uint256 => address) private tokenIdToApproved;
+  mapping(address => mapping(address => bool)) private ownerToOperatorApproval;
 
   uint256 private mintedTokenCountAndId = 0;
 
@@ -44,7 +45,11 @@ contract ERC721 is IERC721 {
   function setApprovalForAll(
     address operator,
     bool approved
-  ) external override {}
+  ) external override {
+    ownerToOperatorApproval[msg.sender][operator] = approved;
+
+    emit ApprovalForAll(msg.sender, operator, approved);
+  }
 
   function getApproved(
     uint256 tokenId
@@ -57,7 +62,9 @@ contract ERC721 is IERC721 {
   function isApprovedForAll(
     address _owner,
     address operator
-  ) external view override returns (bool) {}
+  ) external view override returns (bool) {
+    return ownerToOperatorApproval[_owner][operator];
+  }
 
   function mint() external payable {
     uint256 requiredPrice = this.tokenPrice();

@@ -27,14 +27,14 @@ describe("ERC721 contract", () => {
   });
 
   describe("Queries", () => {
-    it("returns 0 for an account having no NFT", () => {
+    it("should return 0 for an account having no NFT", () => {
       const [owner] = signers;
 
       return contract.balanceOf(owner)
         .should.eventually.equal(0n);
     });
 
-    it("updates the balance after a mint", async () => {
+    it("should update the balance after a mint", async () => {
       const [owner, account] = signers;
 
       await mintTokens(contract, owner, 2n);
@@ -103,10 +103,46 @@ describe("ERC721 contract", () => {
       return contract.getApproved(tokenIdentifiers[0])
         .should.eventually.equal(ethers.ZeroAddress);
     });
+
+    it("should say that an arbitrary address is not an operator for owner", () => {
+      const [owner, arbitraryAccount] = signers;
+
+      return contract.isApprovedForAll(owner, arbitraryAccount)
+        .should.eventually.equal(false);
+    });
+
+    it("should approve multiple operators per owner and emit approval for all", async () => {
+      const [owner, firstOperator, secondOperator] = signers;
+
+      const approveFirstOperatorTx = await contract.connect(owner)
+        .setApprovalForAll(
+          firstOperator,
+          true,
+        );
+      await approveFirstOperatorTx.wait();
+
+      const approveSecondOperatorTx = await contract.connect(owner)
+        .setApprovalForAll(
+          secondOperator,
+          true,
+        );
+      await approveSecondOperatorTx.wait();
+
+      return Promise.all([
+        approveFirstOperatorTx.should.emit(contract, "ApprovalForAll")
+          .withArgs(owner, firstOperator, true),
+        approveSecondOperatorTx.should.emit(contract, "ApprovalForAll")
+          .withArgs(owner, secondOperator, true),
+        contract.isApprovedForAll(owner, firstOperator)
+          .should.eventually.be.true,
+        contract.isApprovedForAll(owner, secondOperator)
+          .should.eventually.be.true,
+      ]);
+    });
   });
 
   describe("Minting and burning", () => {
-    it("is not possible to mint NFT for free", () => {
+    it("should not be possible to mint NFT for free", () => {
       const [owner] = signers;
 
       return contract.connect(owner)
@@ -115,7 +151,7 @@ describe("ERC721 contract", () => {
         .withArgs(ethers.parseEther("0.01"));
     });
 
-    it("costs 0.01 eth to mint the very first NFT and it updates the buyer balance", async () => {
+    it("should cost 0.01 eth to mint the very first NFT and it updates the buyer balance", async () => {
       const [owner] = signers;
       const tokenPrice = await contract.tokenPrice();
 
@@ -127,7 +163,7 @@ describe("ERC721 contract", () => {
         .should.eventually.equal(1n);
     });
 
-    it("costs twice to mint the next NFT", async () => {
+    it("should cost twice to mint the next NFT", async () => {
       const [owner, account] = signers;
       const firstTokenPrice = await contract.tokenPrice();
 
@@ -140,7 +176,7 @@ describe("ERC721 contract", () => {
         .should.eventually.equal(ethers.parseEther("0.02"));
     });
 
-    it("is not possible to mint more than 10 tokens", async () => {
+    it("should not be possible to mint more than 10 tokens", async () => {
       const [owner] = signers;
 
       await mintTokens(contract, owner, 10n);
