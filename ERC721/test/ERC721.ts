@@ -94,13 +94,9 @@ describe("ERC721 contract", () => {
     it("should returns the zero address for a not yet approved NFT", async () => {
       const [owner] = signers;
 
-      const tokenIdentifiers = await mintTokensAndReturnTokenIdentifiers(
-        contract,
-        owner,
-        1,
-      );
+      const tokenId = await mintOneToken(contract, owner);
 
-      return contract.getApproved(tokenIdentifiers[0])
+      return contract.getApproved(tokenId)
         .should.eventually.equal(ethers.ZeroAddress);
     });
 
@@ -194,8 +190,7 @@ describe("ERC721 contract", () => {
     it("should not be possible to burn a token not owned nor operated by the sender", async () => {
       const [owner, account] = signers;
 
-      const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const tokenId = await mintOneToken(contract, owner);
 
       return contract.connect(account).burn(tokenId)
         .should.revertedWithCustomError(contract, "NotTokenOwner");
@@ -203,8 +198,7 @@ describe("ERC721 contract", () => {
 
     it("should be possible for a token owner to burn it", async () => {
       const [owner] = signers;
-      const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const tokenId = await mintOneToken(contract, owner);
 
       return contract.connect(owner).burn(tokenId)
         .should.not.revertedWithCustomError(contract, "NotTokenOwner")
@@ -214,8 +208,7 @@ describe("ERC721 contract", () => {
     it("should be possible for an operator to burn a token", async () => {
       const [owner, operator] = signers;
 
-      const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const tokenId = await mintOneToken(contract, owner);
       const approvalTx = await contract.connect(owner).setApprovalForAll(
         operator,
         true,
@@ -232,8 +225,7 @@ describe("ERC721 contract", () => {
     it("should decrease the total supply of token as well as the owner balance after a token burn", async () => {
       const [owner] = signers;
 
-      const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const tokenId = await mintOneToken(contract, owner);
       const tx = await contract.connect(owner).burn(tokenId);
       await tx.wait();
 
@@ -286,11 +278,7 @@ describe("ERC721 contract", () => {
     it("should not be possible to approve a token that is not owned by sender", async () => {
       const [owner, account] = signers;
 
-      const tokenId = (await mintTokensAndReturnTokenIdentifiers(
-        contract,
-        owner,
-        1,
-      ))[0];
+      const tokenId = await mintOneToken(contract, owner);
 
       return contract.connect(account).approve(owner, tokenId)
         .should.revertedWithCustomError(contract, "NotTokenOwner");
@@ -299,8 +287,7 @@ describe("ERC721 contract", () => {
     it("should be possible to approve a token that is owned by a sender", async () => {
       const [owner, account] = signers;
 
-      const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const tokenId = await mintOneToken(contract, owner);
 
       return contract.connect(owner).approve(account, tokenId)
         .should.emit(contract, "Approval")
@@ -310,8 +297,7 @@ describe("ERC721 contract", () => {
     it("should be possible for an operator to approve a not owned token", async () => {
       const [owner, operator, account] = signers;
 
-      const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const tokenId = await mintOneToken(contract, owner);
 
       const setApproveForAllTx = await contract.connect(owner)
         .setApprovalForAll(operator, true);
@@ -345,8 +331,7 @@ describe("ERC721 contract", () => {
     it("should not be possible to transfer from a not owned token", async () => {
       const [owner, operator, to, account] = signers;
 
-      const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const tokenId = await mintOneToken(contract, owner);
 
       return contract.connect(operator).transferFrom(account, to, tokenId)
         .should.be.revertedWithCustomError(contract, "NotTokenOwner");
@@ -355,8 +340,7 @@ describe("ERC721 contract", () => {
     it("should not be possible to transfer from a sender that is not owner, approved or operator", async () => {
       const [owner, to, account] = signers;
 
-      const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const tokenId = await mintOneToken(contract, owner);
 
       return contract.connect(account).transferFrom(owner, to, tokenId)
         .should.be.revertedWithCustomError(
@@ -368,9 +352,7 @@ describe("ERC721 contract", () => {
     it("should be possible to transfer from with the sender being the owner of the token", async () => {
       const [owner, to] = signers;
 
-      // TODO: create a function minting only one token and returning an unique token id
-      const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const tokenId = await mintOneToken(contract, owner);
 
       return contract.connect(owner).transferFrom(owner, to, tokenId)
         .should.emit(contract, "Transfer")
@@ -380,8 +362,7 @@ describe("ERC721 contract", () => {
     it("should be possible to transfer from with the sender being the approved address for the token", async () => {
       const [owner, to, approved] = signers;
 
-      const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const tokenId = await mintOneToken(contract, owner);
 
       const tx = await contract.connect(owner).approve(approved, tokenId);
       await tx.wait();
@@ -394,8 +375,7 @@ describe("ERC721 contract", () => {
     it("should be possible to transfer from with the sender being the operator for the owner", async () => {
       const [owner, to, operator] = signers;
 
-      const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const tokenId = await mintOneToken(contract, owner);
 
       const tx = await contract.connect(owner).setApprovalForAll(
         operator,
@@ -411,8 +391,7 @@ describe("ERC721 contract", () => {
     it("should update balances and token ownership after a successful transfer from", async () => {
       const [owner, to] = signers;
 
-      const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const tokenId = await mintOneToken(contract, owner);
 
       const tx = await contract.connect(owner).transferFrom(
         owner,
@@ -453,4 +432,8 @@ async function mintTokensAndReturnTokenIdentifiers(
   const ownerEvents = await contract.queryFilter(ownerFilter);
 
   return ownerEvents.map((event: ChainEvent) => event.args[2]);
+}
+
+async function mintOneToken(contract: Contract, owner: Signer) {
+  return (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
 }
