@@ -23,6 +23,8 @@ contract ERC721 is IERC721 {
   error TokenSupplyExhausted();
   error InvalidTokenId();
   error NotTokenOwner();
+  error InvalidAddress();
+  error NotTokenOwnerNorOperatorNorApproved();
 
   function totalSupply() external view returns (uint8) {
     return _totalSupply;
@@ -44,7 +46,25 @@ contract ERC721 is IERC721 {
     address from,
     address to,
     uint256 tokenId
-  ) external payable override {}
+  ) external payable override {
+    require(to != address(0), InvalidAddress());
+    address _owner = tokenIdToOwner[tokenId];
+
+    require(_owner != address(0), InvalidTokenId());
+    require(_owner == from, NotTokenOwner());
+    require(
+      msg.sender == _owner ||
+        msg.sender == tokenIdToApproved[tokenId] ||
+        ownerToOperatorApproval[_owner][msg.sender],
+      NotTokenOwnerNorOperatorNorApproved()
+    );
+
+    balances[from]--;
+    balances[to]++;
+    tokenIdToOwner[tokenId] = to;
+
+    emit Transfer(from, to, tokenId);
+  }
 
   function approve(
     address approved,
@@ -57,6 +77,8 @@ contract ERC721 is IERC721 {
       _owner == msg.sender || ownerToOperatorApproval[_owner][msg.sender],
       NotTokenOwner()
     );
+
+    tokenIdToApproved[tokenId] = approved;
 
     emit Approval(msg.sender, approved, tokenId);
   }

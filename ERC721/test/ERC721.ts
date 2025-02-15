@@ -322,6 +322,115 @@ describe("ERC721 contract", () => {
         .withArgs(operator, account, tokenId);
     });
   });
+
+  describe("transfer", () => {
+    it("should not be possible to transfer from with a zero destination address", () => {
+      const [owner, operator] = signers;
+
+      return contract.connect(operator).transferFrom(
+        owner,
+        ethers.ZeroAddress,
+        42,
+      )
+        .should.be.revertedWithCustomError(contract, "InvalidAddress");
+    });
+
+    it("should not be possible to transfer from an invalid token", () => {
+      const [owner, operator, to] = signers;
+
+      return contract.connect(operator).transferFrom(owner, to, 99)
+        .should.be.revertedWithCustomError(contract, "InvalidTokenId");
+    });
+
+    it("should not be possible to transfer from a not owned token", async () => {
+      const [owner, operator, to, account] = signers;
+
+      const tokenId =
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+
+      return contract.connect(operator).transferFrom(account, to, tokenId)
+        .should.be.revertedWithCustomError(contract, "NotTokenOwner");
+    });
+
+    it("should not be possible to transfer from a sender that is not owner, approved or operator", async () => {
+      const [owner, to, account] = signers;
+
+      const tokenId =
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+
+      return contract.connect(account).transferFrom(owner, to, tokenId)
+        .should.be.revertedWithCustomError(
+          contract,
+          "NotTokenOwnerNorOperatorNorApproved",
+        );
+    });
+
+    it("should be possible to transfer from with the sender being the owner of the token", async () => {
+      const [owner, to] = signers;
+
+      // TODO: create a function minting only one token and returning an unique token id
+      const tokenId =
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+
+      return contract.connect(owner).transferFrom(owner, to, tokenId)
+        .should.emit(contract, "Transfer")
+        .withArgs(owner, to, tokenId);
+    });
+
+    it("should be possible to transfer from with the sender being the approved address for the token", async () => {
+      const [owner, to, approved] = signers;
+
+      const tokenId =
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+
+      const tx = await contract.connect(owner).approve(approved, tokenId);
+      await tx.wait();
+
+      return contract.connect(approved).transferFrom(owner, to, tokenId)
+        .should.emit(contract, "Transfer")
+        .withArgs(owner, to, tokenId);
+    });
+
+    it("should be possible to transfer from with the sender being the operator for the owner", async () => {
+      const [owner, to, operator] = signers;
+
+      const tokenId =
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+
+      const tx = await contract.connect(owner).setApprovalForAll(
+        operator,
+        true,
+      );
+      await tx.wait();
+
+      return contract.connect(operator).transferFrom(owner, to, tokenId)
+        .should.emit(contract, "Transfer")
+        .withArgs(owner, to, tokenId);
+    });
+
+    it("should update balances and token ownership after a successful transfer from", async () => {
+      const [owner, to] = signers;
+
+      const tokenId =
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+
+      const tx = await contract.connect(owner).transferFrom(
+        owner,
+        to,
+        tokenId,
+      );
+      await tx.wait();
+
+      return Promise.all([
+        contract.balanceOf(owner)
+          .should.eventually.equal(0),
+        contract.balanceOf(to)
+          .should.eventually.equal(1),
+        contract.ownerOf(tokenId)
+          .should.eventually.equal(to),
+      ]);
+    });
+  });
 });
 
 async function mintTokens(contract: Contract, owner: Signer, count: number) {
