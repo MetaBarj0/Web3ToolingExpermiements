@@ -110,35 +110,6 @@ describe("ERC721 contract", () => {
       return contract.isApprovedForAll(owner, arbitraryAccount)
         .should.eventually.equal(false);
     });
-
-    it("should approve multiple operators per owner and emit approval for all", async () => {
-      const [owner, firstOperator, secondOperator] = signers;
-
-      const approveFirstOperatorTx = await contract.connect(owner)
-        .setApprovalForAll(
-          firstOperator,
-          true,
-        );
-      await approveFirstOperatorTx.wait();
-
-      const approveSecondOperatorTx = await contract.connect(owner)
-        .setApprovalForAll(
-          secondOperator,
-          true,
-        );
-      await approveSecondOperatorTx.wait();
-
-      return Promise.all([
-        approveFirstOperatorTx.should.emit(contract, "ApprovalForAll")
-          .withArgs(owner, firstOperator, true),
-        approveSecondOperatorTx.should.emit(contract, "ApprovalForAll")
-          .withArgs(owner, secondOperator, true),
-        contract.isApprovedForAll(owner, firstOperator)
-          .should.eventually.be.true,
-        contract.isApprovedForAll(owner, secondOperator)
-          .should.eventually.be.true,
-      ]);
-    });
   });
 
   describe("Minting and burning", () => {
@@ -209,6 +180,83 @@ describe("ERC721 contract", () => {
           .should.emit(contract, "Transfer")
           .withArgs(ethers.ZeroAddress, account, 2n),
       ]);
+    });
+  });
+
+  describe("Approval", () => {
+    it("should approve multiple operators per owner and emit approval for all", async () => {
+      const [owner, firstOperator, secondOperator] = signers;
+
+      const approveFirstOperatorTx = await contract.connect(owner)
+        .setApprovalForAll(
+          firstOperator,
+          true,
+        );
+      await approveFirstOperatorTx.wait();
+
+      const approveSecondOperatorTx = await contract.connect(owner)
+        .setApprovalForAll(
+          secondOperator,
+          true,
+        );
+      await approveSecondOperatorTx.wait();
+
+      return Promise.all([
+        approveFirstOperatorTx.should.emit(contract, "ApprovalForAll")
+          .withArgs(owner, firstOperator, true),
+        approveSecondOperatorTx.should.emit(contract, "ApprovalForAll")
+          .withArgs(owner, secondOperator, true),
+        contract.isApprovedForAll(owner, firstOperator)
+          .should.eventually.be.true,
+        contract.isApprovedForAll(owner, secondOperator)
+          .should.eventually.be.true,
+      ]);
+    });
+
+    it("should not be possible to approve an invalid token id", () => {
+      const [owner, account] = signers;
+
+      return contract.connect(owner).approve(account, 66n)
+        .should.revertedWithCustomError(contract, "InvalidTokenId");
+    });
+
+    it("should not be possible to approve a token that is not owned by sender", async () => {
+      const [owner, account] = signers;
+
+      const tokenId = (await mintTokensAndReturnTokenIdentifiers(
+        contract,
+        owner,
+        1n,
+      ))[0];
+
+      return contract.connect(account).approve(owner, tokenId)
+        .should.revertedWithCustomError(contract, "NotTokenOwner");
+    });
+
+    it("should be possible to approve a token that is owned by a sender", async () => {
+      const [owner, account] = signers;
+
+      const tokenId =
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1n))[0];
+
+      return contract.connect(owner).approve(account, tokenId)
+        .should.emit(contract, "Approval")
+        .withArgs(owner, account, tokenId);
+    });
+
+    it("should be possible for an operator to approve a not owned token", async () => {
+      const [owner, operator, account] = signers;
+
+      const tokenId =
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1n))[0];
+
+      const setApproveForAllTx = await contract.connect(owner)
+        .setApprovalForAll(operator, true);
+      await setApproveForAllTx.wait();
+
+      return contract.connect(operator).approve(account, tokenId)
+        .should.emit(contract, "Approval")
+        .withArgs(operator, account, tokenId);
     });
   });
 });

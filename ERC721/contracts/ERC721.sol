@@ -5,13 +5,12 @@ import "./IERC721.sol";
 
 contract ERC721 is IERC721 {
   address public owner;
+  uint256 private mintedTokenCountAndId = 0;
 
   mapping(address => uint256) private balances;
   mapping(uint256 => address) private tokenIdToOwner;
   mapping(uint256 => address) private tokenIdToApproved;
   mapping(address => mapping(address => bool)) private ownerToOperatorApproval;
-
-  uint256 private mintedTokenCountAndId = 0;
 
   constructor() {
     owner = msg.sender;
@@ -20,6 +19,7 @@ contract ERC721 is IERC721 {
   error IncorrectEthAmount(uint256 amount);
   error TokenSupplyExhausted();
   error InvalidTokenId();
+  error NotTokenOwner();
 
   function balanceOf(address _owner) external view override returns (uint256) {
     return balances[_owner];
@@ -40,7 +40,16 @@ contract ERC721 is IERC721 {
   function approve(
     address approved,
     uint256 tokenId
-  ) external payable override {}
+  ) external payable override {
+    require(tokenIdToOwner[tokenId] != address(0), InvalidTokenId());
+    require(
+      tokenIdToOwner[tokenId] == msg.sender ||
+        ownerToOperatorApproval[tokenIdToOwner[tokenId]][msg.sender],
+      NotTokenOwner()
+    );
+
+    emit Approval(msg.sender, approved, tokenId);
+  }
 
   function setApprovalForAll(
     address operator,
