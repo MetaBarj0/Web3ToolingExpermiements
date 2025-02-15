@@ -5,7 +5,8 @@ import "./IERC721.sol";
 
 contract ERC721 is IERC721 {
   address public owner;
-  uint256 private mintedTokenCountAndId = 0;
+  uint8 private mintedTokenCountAndId;
+  uint8 private _totalSupply;
 
   mapping(address => uint256) private balances;
   mapping(uint256 => address) private tokenIdToOwner;
@@ -14,6 +15,8 @@ contract ERC721 is IERC721 {
 
   constructor() {
     owner = msg.sender;
+    mintedTokenCountAndId = 0;
+    _totalSupply = 10;
   }
 
   error IncorrectEthAmount(uint256 amount);
@@ -21,14 +24,20 @@ contract ERC721 is IERC721 {
   error InvalidTokenId();
   error NotTokenOwner();
 
+  function totalSupply() external view returns (uint8) {
+    return _totalSupply;
+  }
+
   function balanceOf(address _owner) external view override returns (uint256) {
     return balances[_owner];
   }
 
   function ownerOf(uint256 tokenId) external view override returns (address) {
-    require(tokenIdToOwner[tokenId] != address(0), InvalidTokenId());
+    address _owner = tokenIdToOwner[tokenId];
 
-    return tokenIdToOwner[tokenId];
+    require(_owner != address(0), InvalidTokenId());
+
+    return _owner;
   }
 
   function transferFrom(
@@ -41,10 +50,11 @@ contract ERC721 is IERC721 {
     address approved,
     uint256 tokenId
   ) external payable override {
-    require(tokenIdToOwner[tokenId] != address(0), InvalidTokenId());
+    address _owner = tokenIdToOwner[tokenId];
+
+    require(_owner != address(0), InvalidTokenId());
     require(
-      tokenIdToOwner[tokenId] == msg.sender ||
-        ownerToOperatorApproval[tokenIdToOwner[tokenId]][msg.sender],
+      _owner == msg.sender || ownerToOperatorApproval[_owner][msg.sender],
       NotTokenOwner()
     );
 
@@ -86,6 +96,19 @@ contract ERC721 is IERC721 {
     tokenIdToOwner[mintedTokenCountAndId] = msg.sender;
 
     emit Transfer(address(0), msg.sender, mintedTokenCountAndId);
+  }
+
+  function burn(uint256 tokenId) external {
+    address _owner = tokenIdToOwner[tokenId];
+
+    require(_owner != address(0), InvalidTokenId());
+    require(
+      _owner == msg.sender || ownerToOperatorApproval[_owner][msg.sender],
+      NotTokenOwner()
+    );
+
+    _totalSupply--;
+    balances[_owner]--;
   }
 
   function tokenPrice() external view returns (uint256) {

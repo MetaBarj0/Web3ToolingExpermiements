@@ -37,8 +37,8 @@ describe("ERC721 contract", () => {
     it("should update the balance after a mint", async () => {
       const [owner, account] = signers;
 
-      await mintTokens(contract, owner, 2n);
-      await mintTokens(contract, account, 3n);
+      await mintTokens(contract, owner, 2);
+      await mintTokens(contract, account, 3);
 
       return Promise.all([
         contract.balanceOf(owner)
@@ -63,22 +63,22 @@ describe("ERC721 contract", () => {
       const ownerTokenIdentifiers = await mintTokensAndReturnTokenIdentifiers(
         contract,
         owner,
-        2n,
+        2,
       );
 
       const accountTokenIdentifiers = await mintTokensAndReturnTokenIdentifiers(
         contract,
         account,
-        4n,
+        4,
       );
 
       return Promise.all(
         [
-          ...ownerTokenIdentifiers.map((tokenId: bigint) =>
+          ...ownerTokenIdentifiers.map((tokenId) =>
             contract.ownerOf(tokenId)
               .should.eventually.equal(owner)
           ),
-          ...accountTokenIdentifiers.map((tokenId: bigint) =>
+          ...accountTokenIdentifiers.map((tokenId) =>
             contract.ownerOf(tokenId)
               .should.eventually.equal(account)
           ),
@@ -97,7 +97,7 @@ describe("ERC721 contract", () => {
       const tokenIdentifiers = await mintTokensAndReturnTokenIdentifiers(
         contract,
         owner,
-        1n,
+        1,
       );
 
       return contract.getApproved(tokenIdentifiers[0])
@@ -109,6 +109,11 @@ describe("ERC721 contract", () => {
 
       return contract.isApprovedForAll(owner, arbitraryAccount)
         .should.eventually.equal(false);
+    });
+
+    it("should be an initial amount of 10 token", () => {
+      return contract.totalSupply()
+        .should.eventually.equal(10);
     });
   });
 
@@ -124,14 +129,11 @@ describe("ERC721 contract", () => {
 
     it("should cost 0.01 eth to mint the very first NFT and it updates the buyer balance", async () => {
       const [owner] = signers;
-      const tokenPrice = await contract.tokenPrice();
 
-      const tx = await contract.connect(owner)
-        .mint({ value: tokenPrice });
-      await tx.wait();
+      await mintTokensAndReturnTokenIdentifiers(contract, owner, 3);
 
       return contract.balanceOf(owner)
-        .should.eventually.equal(1n);
+        .should.eventually.equal(3n);
     });
 
     it("should cost twice to mint the next NFT", async () => {
@@ -150,7 +152,7 @@ describe("ERC721 contract", () => {
     it("should not be possible to mint more than 10 tokens", async () => {
       const [owner] = signers;
 
-      await mintTokens(contract, owner, 10n);
+      await mintTokens(contract, owner, 10);
 
       return contract.connect(owner).mint({
         value: await contract.tokenPrice(),
@@ -179,6 +181,67 @@ describe("ERC721 contract", () => {
         txAccount
           .should.emit(contract, "Transfer")
           .withArgs(ethers.ZeroAddress, account, 2n),
+      ]);
+    });
+
+    it("should not be possible to burn an invalid token", () => {
+      const [owner] = signers;
+
+      return contract.connect(owner).burn(99n)
+        .should.revertedWithCustomError(contract, "InvalidTokenId");
+    });
+
+    it("should not be possible to burn a token not owned nor operated by the sender", async () => {
+      const [owner, account] = signers;
+
+      const tokenId =
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+
+      return contract.connect(account).burn(tokenId)
+        .should.revertedWithCustomError(contract, "NotTokenOwner");
+    });
+
+    it("should be possible for a token owner to burn it", async () => {
+      const [owner] = signers;
+      const tokenId =
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+
+      return contract.connect(owner).burn(tokenId)
+        .should.not.revertedWithCustomError(contract, "NotTokenOwner")
+        .and.should.not.revertedWithCustomError(contract, "InvalidTokenId");
+    });
+
+    it("should be possible for an operator to burn a token", async () => {
+      const [owner, operator] = signers;
+
+      const tokenId =
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const approvalTx = await contract.connect(owner).setApprovalForAll(
+        operator,
+        true,
+      );
+      await approvalTx.wait();
+
+      await contract.connect(operator).burn(tokenId);
+
+      return contract.connect(operator).burn(tokenId)
+        .should.not.be.revertedWithCustomError(contract, "NotTokenOwner")
+        .and.should.not.be.revertedWithCustomError(contract, "InvalidTokenId");
+    });
+
+    it("should decrease the total supply of token as well as the owner balance after a token burn", async () => {
+      const [owner] = signers;
+
+      const tokenId =
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
+      const tx = await contract.connect(owner).burn(tokenId);
+      await tx.wait();
+
+      return Promise.all([
+        contract.totalSupply()
+          .should.eventually.equal(9),
+        contract.balanceOf(owner)
+          .should.eventually.equal(0),
       ]);
     });
   });
@@ -226,7 +289,7 @@ describe("ERC721 contract", () => {
       const tokenId = (await mintTokensAndReturnTokenIdentifiers(
         contract,
         owner,
-        1n,
+        1,
       ))[0];
 
       return contract.connect(account).approve(owner, tokenId)
@@ -237,7 +300,7 @@ describe("ERC721 contract", () => {
       const [owner, account] = signers;
 
       const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1n))[0];
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
 
       return contract.connect(owner).approve(account, tokenId)
         .should.emit(contract, "Approval")
@@ -248,7 +311,7 @@ describe("ERC721 contract", () => {
       const [owner, operator, account] = signers;
 
       const tokenId =
-        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1n))[0];
+        (await mintTokensAndReturnTokenIdentifiers(contract, owner, 1))[0];
 
       const setApproveForAllTx = await contract.connect(owner)
         .setApprovalForAll(operator, true);
@@ -261,7 +324,7 @@ describe("ERC721 contract", () => {
   });
 });
 
-async function mintTokens(contract: Contract, owner: Signer, count: bigint) {
+async function mintTokens(contract: Contract, owner: Signer, count: number) {
   for (let index = 0n; index < count; index++) {
     const tx = await contract.connect(owner).mint({
       value: await contract.tokenPrice(),
@@ -274,8 +337,8 @@ async function mintTokens(contract: Contract, owner: Signer, count: bigint) {
 async function mintTokensAndReturnTokenIdentifiers(
   contract: Contract,
   owner: Signer,
-  count: bigint,
-): Promise<bigint[]> {
+  count: number,
+): Promise<number[]> {
   const ownerFilter = contract.filters.Transfer(null, owner);
   await mintTokens(contract, owner, count);
   const ownerEvents = await contract.queryFilter(ownerFilter);
