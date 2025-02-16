@@ -32,12 +32,61 @@ describe("ERC721 contract", () => {
     });
   });
 
-  describe("Queries", () => {
+  describe("Initial state", () => {
     it("should return 0 for an account having no NFT", () => {
       const [owner] = signers;
 
       return contract.balanceOf(owner)
         .should.eventually.equal(0);
+    });
+
+    it("should revert with a InvalidTokenId error when querying the owner with an invalid token id", () => {
+      const invalidTokenIdentifiers = [0, 1, 42];
+
+      return invalidTokenIdentifiers.map((tokenId) =>
+        contract.ownerOf(tokenId)
+          .should.be.revertedWithCustomError(contract, "InvalidTokenId")
+      );
+    });
+
+    it("should revert with a InvalidTokenId error when getting the approval for an invalid token id", () => {
+      return contract.getApproved(99)
+        .should.be.revertedWithCustomError(contract, "InvalidTokenId");
+    });
+
+    it("should say that an arbitrary address is not an operator for owner", () => {
+      const [owner, account] = signers;
+
+      return contract.isApprovedForAll(owner, account)
+        .should.eventually.equal(false);
+    });
+
+    it("should be an initial amount of 10 token", () => {
+      return contract.totalSupply()
+        .should.eventually.equal(10);
+    });
+  });
+
+  describe("Minting", () => {
+    it("should not be possible to mint NFT for free", () => {
+      const [owner] = signers;
+
+      return contract.connect(owner)
+        .mint()
+        .should.be.revertedWithCustomError(contract, "IncorrectEthAmount")
+        .withArgs(ethers.parseEther("0.01"));
+    });
+
+    it("should cost 0.01 eth to mint the very first NFT and update the buyer's balance", async () => {
+      const [owner] = signers;
+
+      const tx = await contract.connect(owner).mint({
+        value: ethers.parseEther("0.01"),
+      });
+      await tx.wait();
+
+      return contract.balanceOf(owner)
+        .should.eventually.equal(1);
     });
 
     it("should update the balance after a mint", async () => {
@@ -54,16 +103,7 @@ describe("ERC721 contract", () => {
       ]);
     });
 
-    it("should revert with a InvalidTokenId error when querying the owner with an invalid token id", () => {
-      const invalidTokenIdentifiers = [0, 1, 42];
-
-      return invalidTokenIdentifiers.map((tokenId) =>
-        contract.ownerOf(tokenId)
-          .should.be.revertedWithCustomError(contract, "InvalidTokenId")
-      );
-    });
-
-    it("should returns the owner of a valid token id", async () => {
+    it("should returns the owner of a valid minted token id", async () => {
       const [owner, account] = signers;
 
       const ownerTokenIdentifiers = await mintTokensAndReturnTokenIdentifiers(
@@ -90,52 +130,6 @@ describe("ERC721 contract", () => {
           ),
         ],
       );
-    });
-
-    it("should revert with a InvalidTokenId error when getting the approval for an invalid token id", () => {
-      return contract.getApproved(99)
-        .should.be.revertedWithCustomError(contract, "InvalidTokenId");
-    });
-
-    it("should returns the zero address for a not yet approved NFT", async () => {
-      const [owner] = signers;
-
-      const tokenId = await mintOneToken(contract, owner);
-
-      return contract.getApproved(tokenId)
-        .should.eventually.equal(ethers.ZeroAddress);
-    });
-
-    it("should say that an arbitrary address is not an operator for owner", () => {
-      const [owner, account] = signers;
-
-      return contract.isApprovedForAll(owner, account)
-        .should.eventually.equal(false);
-    });
-
-    it("should be an initial amount of 10 token", () => {
-      return contract.totalSupply()
-        .should.eventually.equal(10);
-    });
-  });
-
-  describe("Minting and burning", () => {
-    it("should not be possible to mint NFT for free", () => {
-      const [owner] = signers;
-
-      return contract.connect(owner)
-        .mint()
-        .should.be.revertedWithCustomError(contract, "IncorrectEthAmount")
-        .withArgs(ethers.parseEther("0.01"));
-    });
-
-    it("should cost 0.01 eth to mint the very first NFT and update the buyer's balance", async () => {
-      const [owner] = signers;
-
-      await mintTokens(contract, owner, 3);
-
-      return contract.balanceOf(owner)
-        .should.eventually.equal(3);
     });
 
     it("should cost twice to mint the next NFT", async () => {
@@ -165,6 +159,15 @@ describe("ERC721 contract", () => {
         );
     });
 
+    it("should returns the zero address for a not yet approved NFT", async () => {
+      const [owner] = signers;
+
+      const tokenId = await mintOneToken(contract, owner);
+
+      return contract.getApproved(tokenId)
+        .should.eventually.equal(ethers.ZeroAddress);
+    });
+
     it("should emit a Transfer event at token minting with from address being 0", async () => {
       const [owner, account] = signers;
 
@@ -191,7 +194,9 @@ describe("ERC721 contract", () => {
           .withArgs(ethers.ZeroAddress, account, accountTokenId),
       ]);
     });
+  });
 
+  describe("Burning", () => {
     it("should not be possible to burn an invalid token", () => {
       const [owner] = signers;
 
