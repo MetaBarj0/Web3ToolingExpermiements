@@ -212,7 +212,7 @@ describe("ERC721 contract", () => {
       return contract.connect(account).burn(tokenId)
         .should.revertedWithCustomError(
           contract,
-          "NotTokenOwnerNorOperatorNorApproved",
+          "Unauthorized",
         );
     });
 
@@ -382,7 +382,7 @@ describe("ERC721 contract", () => {
       return contract.connect(account).transferFrom(owner, to, tokenId)
         .should.be.revertedWithCustomError(
           contract,
-          "NotTokenOwnerNorOperatorNorApproved",
+          "Unauthorized",
         );
     });
 

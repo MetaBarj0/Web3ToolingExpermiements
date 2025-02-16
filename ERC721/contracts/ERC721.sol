@@ -24,7 +24,7 @@ contract ERC721 is IERC721 {
   error InvalidTokenId();
   error NotTokenOwner();
   error InvalidAddress();
-  error NotTokenOwnerNorOperatorNorApproved();
+  error Unauthorized();
 
   function totalSupply() external view returns (uint8) {
     return _totalSupply;
@@ -56,7 +56,7 @@ contract ERC721 is IERC721 {
       msg.sender == _owner ||
         msg.sender == tokenIdToApproved[tokenId] ||
         ownerToOperatorApproval[_owner][msg.sender],
-      NotTokenOwnerNorOperatorNorApproved()
+      Unauthorized()
     );
 
     balances[from]--;
@@ -128,7 +128,7 @@ contract ERC721 is IERC721 {
       _owner == msg.sender ||
         ownerToOperatorApproval[_owner][msg.sender] ||
         msg.sender == tokenIdToApproved[tokenId],
-      NotTokenOwnerNorOperatorNorApproved()
+      Unauthorized()
     );
 
     _totalSupply--;
