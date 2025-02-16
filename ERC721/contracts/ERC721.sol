@@ -134,6 +134,8 @@ contract ERC721 is IERC721 {
     _totalSupply--;
     balances[_owner]--;
     delete tokenIdToOwner[tokenId];
+    // NOTE: there is no need to delete tokenIdToApproved[tokenId] here, gas
+    //       saving!
   }
 
   function tokenPrice() external view returns (uint256) {
