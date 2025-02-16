@@ -125,12 +125,15 @@ contract ERC721 is IERC721 {
 
     require(_owner != address(0), InvalidTokenId());
     require(
-      _owner == msg.sender || ownerToOperatorApproval[_owner][msg.sender],
-      NotTokenOwner()
+      _owner == msg.sender ||
+        ownerToOperatorApproval[_owner][msg.sender] ||
+        msg.sender == tokenIdToApproved[tokenId],
+      NotTokenOwnerNorOperatorNorApproved()
     );
 
     _totalSupply--;
     balances[_owner]--;
+    delete tokenIdToOwner[tokenId];
   }
 
   function tokenPrice() external view returns (uint256) {

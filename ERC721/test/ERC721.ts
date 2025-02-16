@@ -1,13 +1,13 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ethers } from "hardhat";
-import { ChainEvent, Contract, Signer, Signers } from "./typesUtils.ts";
+import { ChainEvent, Contract, Signer } from "./typesUtils.ts";
 
 chai.use(chaiAsPromised);
 chai.should();
 
 describe("ERC721 contract", () => {
-  let signers: Signers;
+  let signers: Signer[];
   let contract: Contract;
 
   before(async () => {
@@ -31,7 +31,7 @@ describe("ERC721 contract", () => {
       const [owner] = signers;
 
       return contract.balanceOf(owner)
-        .should.eventually.equal(0n);
+        .should.eventually.equal(0);
     });
 
     it("should update the balance after a mint", async () => {
@@ -42,14 +42,14 @@ describe("ERC721 contract", () => {
 
       return Promise.all([
         contract.balanceOf(owner)
-          .should.eventually.equal(2n),
+          .should.eventually.equal(2),
         contract.balanceOf(account)
-          .should.eventually.equal(3n),
+          .should.eventually.equal(3),
       ]);
     });
 
     it("should revert with a InvalidTokenId error when querying the owner with an invalid token id", () => {
-      const invalidTokenIdentifiers = [0n, 1n, 42n];
+      const invalidTokenIdentifiers = [0, 1, 42];
 
       return invalidTokenIdentifiers.map((tokenId) =>
         contract.ownerOf(tokenId)
@@ -87,7 +87,7 @@ describe("ERC721 contract", () => {
     });
 
     it("should revert with a InvalidTokenId error when getting the approval for an invalid token id", () => {
-      return contract.getApproved(99n)
+      return contract.getApproved(99)
         .should.be.revertedWithCustomError(contract, "InvalidTokenId");
     });
 
@@ -101,9 +101,9 @@ describe("ERC721 contract", () => {
     });
 
     it("should say that an arbitrary address is not an operator for owner", () => {
-      const [owner, arbitraryAccount] = signers;
+      const [owner, account] = signers;
 
-      return contract.isApprovedForAll(owner, arbitraryAccount)
+      return contract.isApprovedForAll(owner, account)
         .should.eventually.equal(false);
     });
 
@@ -123,13 +123,13 @@ describe("ERC721 contract", () => {
         .withArgs(ethers.parseEther("0.01"));
     });
 
-    it("should cost 0.01 eth to mint the very first NFT and it updates the buyer balance", async () => {
+    it("should cost 0.01 eth to mint the very first NFT and update the buyer's balance", async () => {
       const [owner] = signers;
 
-      await mintTokensAndReturnTokenIdentifiers(contract, owner, 3);
+      await mintTokens(contract, owner, 3);
 
       return contract.balanceOf(owner)
-        .should.eventually.equal(3n);
+        .should.eventually.equal(3);
     });
 
     it("should cost twice to mint the next NFT", async () => {
@@ -142,7 +142,7 @@ describe("ERC721 contract", () => {
 
       return contract.connect(account)
         .tokenPrice()
-        .should.eventually.equal(ethers.parseEther("0.02"));
+        .should.eventually.equal(firstTokenPrice * 2n);
     });
 
     it("should not be possible to mint more than 10 tokens", async () => {
@@ -162,21 +162,27 @@ describe("ERC721 contract", () => {
     it("should emit a Transfer event at token minting with from address being 0", async () => {
       const [owner, account] = signers;
 
-      const txOwner = await contract.connect(owner)
-        .mint({ value: await contract.tokenPrice() });
-      await txOwner.wait();
+      const [{ tx: txOwner, tokenId: ownerTokenId }] =
+        await mintTokensAndZipTxWithTokenIdentifiers(
+          contract,
+          owner,
+          1,
+        );
 
-      const txAccount = await contract.connect(account)
-        .mint({ value: await contract.tokenPrice() });
-      await txAccount.wait();
+      const [{ tx: txAccount, tokenId: accountTokenId }] =
+        await mintTokensAndZipTxWithTokenIdentifiers(
+          contract,
+          account,
+          1,
+        );
 
       return Promise.all([
         txOwner
           .should.emit(contract, "Transfer")
-          .withArgs(ethers.ZeroAddress, owner, 1n),
+          .withArgs(ethers.ZeroAddress, owner, ownerTokenId),
         txAccount
           .should.emit(contract, "Transfer")
-          .withArgs(ethers.ZeroAddress, account, 2n),
+          .withArgs(ethers.ZeroAddress, account, accountTokenId),
       ]);
     });
 
@@ -187,13 +193,16 @@ describe("ERC721 contract", () => {
         .should.revertedWithCustomError(contract, "InvalidTokenId");
     });
 
-    it("should not be possible to burn a token not owned nor operated by the sender", async () => {
+    it("should not be possible to burn a token not owned nor approved nor operated by the sender", async () => {
       const [owner, account] = signers;
 
       const tokenId = await mintOneToken(contract, owner);
 
       return contract.connect(account).burn(tokenId)
-        .should.revertedWithCustomError(contract, "NotTokenOwner");
+        .should.revertedWithCustomError(
+          contract,
+          "NotTokenOwnerNorOperatorNorApproved",
+        );
     });
 
     it("should be possible for a token owner to burn it", async () => {
@@ -201,8 +210,18 @@ describe("ERC721 contract", () => {
       const tokenId = await mintOneToken(contract, owner);
 
       return contract.connect(owner).burn(tokenId)
-        .should.not.revertedWithCustomError(contract, "NotTokenOwner")
-        .and.should.not.revertedWithCustomError(contract, "InvalidTokenId");
+        .should.not.be.reverted;
+    });
+
+    it("should be possible for an approved account to burn a token", async () => {
+      const [owner, approved] = signers;
+
+      const tokenId = await mintOneToken(contract, owner);
+      const tx = await contract.connect(owner).approve(approved, tokenId);
+      await tx.wait();
+
+      return contract.connect(approved).burn(tokenId)
+        .should.not.be.reverted;
     });
 
     it("should be possible for an operator to burn a token", async () => {
@@ -215,11 +234,18 @@ describe("ERC721 contract", () => {
       );
       await approvalTx.wait();
 
-      await contract.connect(operator).burn(tokenId);
-
       return contract.connect(operator).burn(tokenId)
-        .should.not.be.revertedWithCustomError(contract, "NotTokenOwner")
-        .and.should.not.be.revertedWithCustomError(contract, "InvalidTokenId");
+        .should.not.be.reverted;
+    });
+
+    it("should revert with invalid token id when attempting to burn several times the same token", async () => {
+      const [owner] = signers;
+      const tokenId = await mintOneToken(contract, owner);
+
+      await contract.connect(owner).burn(tokenId);
+
+      return contract.connect(owner).burn(tokenId)
+        .should.be.revertedWithCustomError(contract, "InvalidTokenId");
     });
 
     it("should decrease the total supply of token as well as the owner balance after a token burn", async () => {
@@ -413,13 +439,17 @@ describe("ERC721 contract", () => {
 });
 
 async function mintTokens(contract: Contract, owner: Signer, count: number) {
+  const transactions: Promise<unknown>[] = [];
+
   for (let index = 0n; index < count; index++) {
     const tx = await contract.connect(owner).mint({
       value: await contract.tokenPrice(),
     });
 
-    await tx.wait();
+    transactions.push(tx.wait());
   }
+
+  return transactions;
 }
 
 async function mintTokensAndReturnTokenIdentifiers(
@@ -432,6 +462,23 @@ async function mintTokensAndReturnTokenIdentifiers(
   const ownerEvents = await contract.queryFilter(ownerFilter);
 
   return ownerEvents.map((event: ChainEvent) => event.args[2]);
+}
+
+async function mintTokensAndZipTxWithTokenIdentifiers(
+  contract: Contract,
+  owner: Signer,
+  count: number,
+) {
+  const ownerFilter = contract.filters.Transfer(null, owner);
+  const transactions = await mintTokens(contract, owner, count);
+  const ownerEvents = await contract.queryFilter(ownerFilter);
+
+  return ownerEvents.map((
+    event: ChainEvent,
+    index: number,
+  ) => {
+    return { tx: transactions[index], tokenId: event.args[2] };
+  });
 }
 
 async function mintOneToken(contract: Contract, owner: Signer) {
