@@ -29,12 +29,10 @@ describe("Prime contract", () => {
       return contract.owner().should.eventually.equal(owner);
     });
 
-    it("should assign the total supply of tokens to the owner when deployed", async () => {
-      const [owner] = signers;
-
-      const ownerBalance = await contract.balanceOf(owner);
-
-      return contract.totalSupply().should.eventually.equal(ownerBalance);
+    it("should set the total supply", () => {
+      return contract.totalSupply().should.eventually.equal(
+        1_000_003_100_000_000_020_653_83n,
+      );
     });
   });
 
@@ -152,6 +150,37 @@ describe("Prime contract", () => {
           .should.emit(contract, "Transfer")
           .withArgs(from, to, spentAmount),
       ]);
+    });
+
+    it("should not be possible to burn token from any account but the owner", () => {
+      const [_, account] = signers;
+
+      return contract.connect(account).burn(1000)
+        .should.be.revertedWithCustomError(contract, "Unauthorized");
+    });
+
+    it("should be possible for the owner to burn tokens and update the total supply", async () => {
+      const [owner] = signers;
+      const initialSupply = await contract.totalSupply();
+      const smallBurnAmount = 1_000_000n;
+      const expectedTotalSupplyAfterSmallBurn = initialSupply - smallBurnAmount;
+
+      const tx = await contract.connect(owner).burn(smallBurnAmount);
+      await tx.wait();
+
+      return contract.totalSupply()
+        .should.eventually.equal(expectedTotalSupplyAfterSmallBurn);
+    });
+
+    it("should not be possible to reduce the total supply below 0 after a burn", async () => {
+      const [owner] = signers;
+      const initialSupply = await contract.totalSupply();
+
+      const tx = await contract.connect(owner).burn(initialSupply + 1n);
+      await tx.wait();
+
+      return contract.totalSupply()
+        .should.eventually.equal(0);
     });
   });
 
