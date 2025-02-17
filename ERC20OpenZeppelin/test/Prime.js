@@ -19,7 +19,7 @@ describe("Prime contract", () => {
 
   beforeEach(async () => {
     contract = await ethers.deployContract("Prime");
-    decimal = await contract.decimal();
+    decimal = await contract.decimals();
   });
 
   describe("Deployment", () => {
@@ -42,6 +42,12 @@ describe("Prime contract", () => {
     it("should be able to transfer token between two accounts", async () => {
       const [owner, account1, account2] = signers;
 
+      const mintTx = await contract.connect(owner).mintFor(
+        owner,
+        _parsePrime("13"),
+      );
+      await mintTx.wait();
+
       await contract.connect(owner).transfer(account1, _parsePrime("13"));
 
       await contract.connect(account1).transfer(account2, _parsePrime("2"));
@@ -56,11 +62,20 @@ describe("Prime contract", () => {
       const [_, account1, account2] = signers;
 
       return contract.connect(account1).transfer(account2, _parsePrime("1"))
-        .should.be.revertedWithCustomError(contract, "NotEnoughToken");
+        .should.be.revertedWithCustomError(
+          contract,
+          "ERC20InsufficientBalance",
+        );
     });
 
-    it("should emit Transfer events", () => {
+    it("should emit Transfer events", async () => {
       const [owner, account1, account2] = signers;
+
+      const mintTx = await contract.connect(owner).mintFor(
+        owner,
+        _parsePrime("17"),
+      );
+      await mintTx.wait();
 
       const firstTransfer = contract.connect(owner).transfer(
         account1,
@@ -85,11 +100,15 @@ describe("Prime contract", () => {
 
       return contract.connect(owner)
         .transferFrom(ethers.ZeroAddress, to, 0)
-        .should.revertedWithCustomError(contract, "InvalidZeroAddress");
+        .should.revertedWithCustomError(contract, "ERC20InvalidApprover")
+        .withArgs(ethers.ZeroAddress);
     });
 
     it("should fail to transfer from behalf of the owner for a too high amount", async () => {
       const [owner, spender, from, to] = signers;
+
+      const mintTx = await contract.connect(owner).mintFor(owner, 1234);
+      await mintTx.wait();
 
       const fromProvisioning = await contract.connect(owner)
         .transfer(from, 1234);
@@ -102,13 +121,17 @@ describe("Prime contract", () => {
         .transferFrom(from, to, 1000)
         .should.revertedWithCustomError(
           contract,
-          "CannotSpendMoreThanApproved",
-        );
+          "ERC20InsufficientAllowance",
+        )
+        .withArgs(spender, 567, 1000);
     });
 
-    it("should be able to tranfer from behalf owner and emit Transfer event as well as update allowances", async () => {
+    it("should be able to transfer from behalf owner and emit Transfer event as well as update allowances", async () => {
       const [owner, from, to, spender] = signers;
       const [approvalAmount, spentAmount] = [456, 123];
+
+      const mintTx = await contract.connect(owner).mintFor(owner, 456);
+      await mintTx.wait();
 
       const fromProvisioning = await contract.connect(owner)
         .transfer(from, approvalAmount);
@@ -135,14 +158,8 @@ describe("Prime contract", () => {
   describe("Approval", () => {
     it("should revert when trying to approve to a zero address spender", () => {
       return contract.approve(ethers.ZeroAddress, 0n).should.be
-        .revertedWithCustomError(contract, "InvalidZeroAddress");
-    });
-
-    it("should revert when trying to approve a too high ammount for a spender", () => {
-      const [_, emptyAccount, spender] = signers;
-
-      return contract.connect(emptyAccount).approve(spender, _parsePrime("1"))
-        .should.be.revertedWithCustomError(contract, "NotEnoughTokenForOwner");
+        .revertedWithCustomError(contract, "ERC20InvalidSpender")
+        .withArgs(ethers.ZeroAddress);
     });
 
     it("should succeed approving a valid spendable amount", async () => {
