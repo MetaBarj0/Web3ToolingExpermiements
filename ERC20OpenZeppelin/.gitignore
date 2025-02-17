@@ -1,0 +1,8 @@
+node_modules
+cache
+artifacts
+ignition/deployments
+coverage.json
+coverage
+mochaOutput.json
+testMatrix.json

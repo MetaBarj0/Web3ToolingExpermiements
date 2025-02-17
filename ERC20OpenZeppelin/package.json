@@ -1,0 +1,27 @@
+{
+  "name": "hardhatsamplejavascript",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx hardhat test",
+    "compile": "npx hardhat compile",
+    "clean": "npx hardhat clean",
+    "watch": "npm run test && npx hardhat watch test",
+    "deployLocal": "npx hardhat ignition deploy ./ignition/modules/prime.js",
+    "deploySepolia": "npx hardhat ignition deploy --network sepolia --verify ./ignition/modules/prime.js",
+    "coverage": "npx hardhat coverage"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "chai-as-promised": "^8.0.1",
+    "hardhat": "^2.22.18",
+    "hardhat-watcher": "^2.5.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.2.0"
+  }
+}
