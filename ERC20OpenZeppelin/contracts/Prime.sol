@@ -11,7 +11,6 @@ contract Prime is ERC20 {
 
     constructor() ERC20("Prime", "PRI") {
         owner_ = _msgSender();
-        totalSupply_ = 1_000_003_100_000_000_020_653_83;
     }
 
     function totalSupply() public view override returns (uint256) {
@@ -30,6 +29,8 @@ contract Prime is ERC20 {
         require(_msgSender() == owner_, Unauthorized());
 
         _mint(to, amount);
+
+        totalSupply_ += amount;
     }
 
     function burn(uint256 amount) external {

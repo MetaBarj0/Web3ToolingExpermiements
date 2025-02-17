@@ -30,9 +30,7 @@ describe("Prime contract", () => {
     });
 
     it("should set the total supply", () => {
-      return contract.totalSupply().should.eventually.equal(
-        1_000_003_100_000_000_020_653_83n,
-      );
+      return contract.totalSupply().should.eventually.equal(0n);
     });
   });
 
@@ -42,6 +40,18 @@ describe("Prime contract", () => {
 
       return contract.connect(notOwner).mintFor(notOwner, 1234)
         .should.be.revertedWithCustomError(contract, "Unauthorized");
+    });
+
+    it("should increase the total supply after having minted tokens", async () => {
+      const [owner] = signers;
+      const mintAmount = 1234567n;
+      const newTotalSupply = await contract.totalSupply() + mintAmount;
+
+      const tx = await contract.connect(owner).mintFor(owner, mintAmount);
+      await tx.wait();
+
+      return contract.totalSupply()
+        .should.eventually.equal(newTotalSupply);
     });
 
     it("should be able to transfer token between two accounts", async () => {
@@ -168,12 +178,18 @@ describe("Prime contract", () => {
 
     it("should be possible for the owner to burn tokens and update the total supply", async () => {
       const [owner] = signers;
-      const initialSupply = await contract.totalSupply();
+      const initialSupply = 2_000_000n;
       const smallBurnAmount = 1_000_000n;
       const expectedTotalSupplyAfterSmallBurn = initialSupply - smallBurnAmount;
 
-      const tx = await contract.connect(owner).burn(smallBurnAmount);
-      await tx.wait();
+      const mintTx = await contract.connect(owner).mintFor(
+        owner,
+        initialSupply,
+      );
+      await mintTx.wait();
+
+      const burnTx = await contract.connect(owner).burn(smallBurnAmount);
+      await burnTx.wait();
 
       return contract.totalSupply()
         .should.eventually.equal(expectedTotalSupplyAfterSmallBurn);
