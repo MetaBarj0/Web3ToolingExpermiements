@@ -109,7 +109,7 @@ contract ERC721 is IERC721 {
   }
 
   function mint() external payable {
-    uint256 requiredPrice = this.tokenPrice();
+    uint256 requiredPrice = tokenPrice();
 
     require(msg.value == requiredPrice, IncorrectEthAmount(requiredPrice));
     require(mintedTokenCountAndId < 10, TokenSupplyExhausted());
@@ -139,7 +139,7 @@ contract ERC721 is IERC721 {
     //       saving!
   }
 
-  function tokenPrice() external view returns (uint256) {
+  function tokenPrice() public view returns (uint256) {
     return 0.01 ether * 2 ** mintedTokenCountAndId;
   }
 }
