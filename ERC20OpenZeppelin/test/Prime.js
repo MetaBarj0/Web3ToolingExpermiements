@@ -172,23 +172,23 @@ describe("Prime contract", () => {
     it("should not be possible to burn token from any account but the owner", () => {
       const [_, account] = signers;
 
-      return contract.connect(account).burn(1000)
+      return contract.connect(account).burn(account, 1000)
         .should.be.revertedWithCustomError(contract, "Unauthorized");
     });
 
     it("should be possible for the owner to burn tokens and update the total supply", async () => {
-      const [owner] = signers;
+      const [owner, to] = signers;
       const initialSupply = 2_000_000n;
       const smallBurnAmount = 1_000_000n;
       const expectedTotalSupplyAfterSmallBurn = initialSupply - smallBurnAmount;
 
       const mintTx = await contract.connect(owner).mintFor(
-        owner,
+        to,
         initialSupply,
       );
       await mintTx.wait();
 
-      const burnTx = await contract.connect(owner).burn(smallBurnAmount);
+      const burnTx = await contract.connect(owner).burn(to, smallBurnAmount);
       await burnTx.wait();
 
       return contract.totalSupply()
@@ -199,7 +199,7 @@ describe("Prime contract", () => {
       const [owner] = signers;
       const initialSupply = await contract.totalSupply();
 
-      const tx = await contract.connect(owner).burn(initialSupply + 1n);
+      const tx = await contract.connect(owner).burn(owner, initialSupply + 1n);
       await tx.wait();
 
       return contract.totalSupply()

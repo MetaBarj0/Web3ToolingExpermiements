@@ -26,11 +26,11 @@ contract Prime is ERC20 {
         _mint(to, amount);
     }
 
-    function burn(uint256 amount) external {
+    function burn(address to, uint256 amount) external {
         require(msg.sender == owner_, Unauthorized());
 
         if (amount > totalSupply()) amount = totalSupply();
 
-        _burn(msg.sender, amount);
+        _burn(to, amount);
     }
 }
