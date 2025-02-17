@@ -10,7 +10,7 @@ contract Prime is ERC20 {
     error Unauthorized();
 
     constructor() ERC20("Prime", "PRI") {
-        owner_ = _msgSender();
+        owner_ = msg.sender;
     }
 
     function totalSupply() public view override returns (uint256) {
@@ -26,7 +26,7 @@ contract Prime is ERC20 {
     }
 
     function mintFor(address to, uint256 amount) external {
-        require(_msgSender() == owner_, Unauthorized());
+        require(msg.sender == owner_, Unauthorized());
 
         _mint(to, amount);
 
@@ -34,7 +34,7 @@ contract Prime is ERC20 {
     }
 
     function burn(uint256 amount) external {
-        require(_msgSender() == owner_, Unauthorized());
+        require(msg.sender == owner_, Unauthorized());
 
         if (amount > totalSupply_) amount = totalSupply_;
 
