@@ -37,6 +37,13 @@ describe("Prime contract", () => {
   });
 
   describe("Transactions", () => {
+    it("should not be possible to mint token for anyone but the contract's owner", () => {
+      const [_, notOwner] = signers;
+
+      return contract.connect(notOwner).mintFor(notOwner, 1234)
+        .should.be.revertedWithCustomError(contract, "Unauthorized");
+    });
+
     it("should be able to transfer token between two accounts", async () => {
       const [owner, account1, account2] = signers;
 
