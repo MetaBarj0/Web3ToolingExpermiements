@@ -386,6 +386,28 @@ describe("ERC721 contract", () => {
         );
     });
 
+    it("should remove an existing approval after a token has been transfered", async () => {
+      const [owner, approved, to] = signers;
+
+      const tokenId = await mintOneToken(contract, owner);
+
+      const approvalTx = await contract.connect(owner).approve(
+        approved,
+        tokenId,
+      );
+      await approvalTx.wait();
+
+      const transferTx = await contract.connect(owner).transferFrom(
+        owner,
+        to,
+        1,
+      );
+      await transferTx.wait();
+
+      return contract.getApproved(tokenId)
+        .should.eventually.equal(ethers.ZeroAddress);
+    });
+
     it("should be possible to transfer from with the sender being the owner of the token", async () => {
       const [owner, to] = signers;
 

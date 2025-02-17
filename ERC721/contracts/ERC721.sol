@@ -62,6 +62,7 @@ contract ERC721 is IERC721 {
     balances[from]--;
     balances[to]++;
     tokenIdToOwner[tokenId] = to;
+    delete tokenIdToApproved[tokenId];
 
     emit Transfer(from, to, tokenId);
   }
