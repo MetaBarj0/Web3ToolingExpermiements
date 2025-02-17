@@ -6,7 +6,8 @@ import "./IERC721.sol";
 contract ERC721 is IERC721 {
   address public owner;
   uint8 private mintedTokenCountAndId;
-  uint8 private _totalSupply;
+  uint8 public totalSupply;
+  uint8 public maxSupply;
 
   mapping(address => uint256) private balances;
   mapping(uint256 => address) private tokenIdToOwner;
@@ -16,7 +17,8 @@ contract ERC721 is IERC721 {
   constructor() {
     owner = msg.sender;
     mintedTokenCountAndId = 0;
-    _totalSupply = 10;
+    totalSupply = 0;
+    maxSupply = 10;
   }
 
   error IncorrectEthAmount(uint256 amount);
@@ -25,10 +27,6 @@ contract ERC721 is IERC721 {
   error NotTokenOwner();
   error InvalidAddress();
   error Unauthorized();
-
-  function totalSupply() external view returns (uint8) {
-    return _totalSupply;
-  }
 
   function balanceOf(address _owner) external view override returns (uint256) {
     return balances[_owner];
@@ -112,11 +110,12 @@ contract ERC721 is IERC721 {
     uint256 requiredPrice = tokenPrice();
 
     require(msg.value == requiredPrice, IncorrectEthAmount(requiredPrice));
-    require(mintedTokenCountAndId < 10, TokenSupplyExhausted());
+    require(mintedTokenCountAndId < maxSupply, TokenSupplyExhausted());
 
     balances[msg.sender]++;
     mintedTokenCountAndId++;
     tokenIdToOwner[mintedTokenCountAndId] = msg.sender;
+    totalSupply++;
 
     emit Transfer(address(0), msg.sender, mintedTokenCountAndId);
   }
@@ -132,7 +131,7 @@ contract ERC721 is IERC721 {
       Unauthorized()
     );
 
-    _totalSupply--;
+    totalSupply--;
     balances[_owner]--;
     delete tokenIdToOwner[tokenId];
     delete tokenIdToApproved[tokenId];

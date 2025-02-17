@@ -8,6 +8,7 @@ import {
   mintTokensAndReturnTokenIdentifiers,
   mintTokensAndZipTxWithTokenIdentifiers,
 } from "./mintTokens.ts";
+import { constrainedMemory } from "node:process";
 
 chai.use(chaiAsPromised);
 chai.should();
@@ -61,9 +62,14 @@ describe("ERC721 contract", () => {
         .should.eventually.equal(false);
     });
 
-    it("should be an initial amount of 10 token", () => {
-      return contract.totalSupply()
+    it("should be a max supply of 10 tokens", () => {
+      return contract.maxSupply()
         .should.eventually.equal(10);
+    });
+
+    it("should initially set the total supply of token to 0", () => {
+      return contract.totalSupply()
+        .should.eventually.equal(0);
     });
   });
 
@@ -89,7 +95,7 @@ describe("ERC721 contract", () => {
         .should.eventually.equal(1);
     });
 
-    it("should update the balance after a mint", async () => {
+    it("should update the balance and the total supply after having minted tokens", async () => {
       const [owner, account] = signers;
 
       await mintTokens(contract, owner, 2);
@@ -100,6 +106,8 @@ describe("ERC721 contract", () => {
           .should.eventually.equal(2),
         contract.balanceOf(account)
           .should.eventually.equal(3),
+        contract.totalSupply()
+          .should.eventually.equal(5),
       ]);
     });
 
@@ -268,7 +276,7 @@ describe("ERC721 contract", () => {
 
       return Promise.all([
         contract.totalSupply()
-          .should.eventually.equal(9),
+          .should.eventually.equal(0),
         contract.balanceOf(owner)
           .should.eventually.equal(0),
       ]);
