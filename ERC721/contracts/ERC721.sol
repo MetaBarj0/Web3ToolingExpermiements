@@ -81,7 +81,7 @@ contract ERC721 is IERC721 {
 
     tokenIdToApproved[tokenId] = approved;
 
-    emit Approval(msg.sender, approved, tokenId);
+    emit Approval(_owner, approved, tokenId);
   }
 
   function setApprovalForAll(

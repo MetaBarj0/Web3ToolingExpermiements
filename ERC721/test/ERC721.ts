@@ -342,7 +342,7 @@ describe("ERC721 contract", () => {
 
       return contract.connect(operator).approve(account, tokenId)
         .should.emit(contract, "Approval")
-        .withArgs(operator, account, tokenId);
+        .withArgs(owner, account, tokenId);
     });
   });
 
