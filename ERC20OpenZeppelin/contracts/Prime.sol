@@ -4,17 +4,12 @@ pragma solidity 0.8.28;
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Prime is ERC20 {
-    uint256 private totalSupply_;
     address private owner_;
 
     error Unauthorized();
 
     constructor() ERC20("Prime", "PRI") {
         owner_ = msg.sender;
-    }
-
-    function totalSupply() public view override returns (uint256) {
-        return totalSupply_;
     }
 
     function owner() public view returns (address) {
@@ -29,15 +24,13 @@ contract Prime is ERC20 {
         require(msg.sender == owner_, Unauthorized());
 
         _mint(to, amount);
-
-        totalSupply_ += amount;
     }
 
     function burn(uint256 amount) external {
         require(msg.sender == owner_, Unauthorized());
 
-        if (amount > totalSupply_) amount = totalSupply_;
+        if (amount > totalSupply()) amount = totalSupply();
 
-        totalSupply_ -= amount;
+        _burn(msg.sender, amount);
     }
 }
