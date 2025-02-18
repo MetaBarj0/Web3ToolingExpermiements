@@ -8,7 +8,6 @@ import {
   mintTokensAndReturnTokenIdentifiers,
   mintTokensAndZipTxWithTokenIdentifiers,
 } from "./mintTokens.ts";
-import { constrainedMemory } from "node:process";
 
 chai.use(chaiAsPromised);
 chai.should();
