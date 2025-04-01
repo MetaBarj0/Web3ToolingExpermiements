@@ -1,13 +1,13 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ethers } from "hardhat";
-import { Contract, Signer } from "./types.ts";
+import { Contract, Signer } from "./types";
 import {
   mintOneToken,
   mintTokens,
   mintTokensAndReturnTokenIdentifiers,
   mintTokensAndZipTxWithTokenIdentifiers,
-} from "./mintTokens.ts";
+} from "./mintTokens";
 
 chai.use(chaiAsPromised);
 chai.should();

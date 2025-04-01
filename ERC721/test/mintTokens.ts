@@ -1,4 +1,4 @@
-import { ChainEvent, Contract, Signer } from "./types.ts";
+import { ChainEvent, Contract, Signer } from "./types";
 
 export async function mintTokens(
   contract: Contract,
@@ -22,18 +22,18 @@ export async function mintTokensAndReturnTokenIdentifiers(
   owner: Signer,
   count: number,
 ): Promise<number[]> {
-  const ownerFilter = contract.filters.Transfer(null, owner);
+  const ownerFilter = contract.filters.Transfer(undefined, owner);
   await mintTokens(contract, owner, count);
   const ownerEvents = await contract.queryFilter(ownerFilter);
 
-  return ownerEvents.map((event: ChainEvent) => event.args[2]);
+  return ownerEvents.map((event: ChainEvent): number => event.args[2] as number);
 }
 export async function mintTokensAndZipTxWithTokenIdentifiers(
   contract: Contract,
   owner: Signer,
   count: number,
 ) {
-  const ownerFilter = contract.filters.Transfer(null, owner);
+  const ownerFilter = contract.filters.Transfer(undefined, owner);
   const transactions = await mintTokens(contract, owner, count);
   const ownerEvents = await contract.queryFilter(ownerFilter);
 
